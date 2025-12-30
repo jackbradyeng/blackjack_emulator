@@ -1,0 +1,541 @@
+package Model.Table;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Objects;
+import Exceptions.PlayerCountException;
+import Model.Actors.Dealer;
+import Model.Actors.Player;
+import Model.Cards.Deck;
+import Model.Table.Bets.Bet;
+import Model.Table.Bets.InsuranceBet;
+import Model.Table.Hands.DealerHand;
+import Model.Table.Hands.Hand;
+import Model.Table.Hands.PlayerHand;
+import Model.Table.Positions.DealerPosition;
+import Model.Table.Positions.PlayerPosition;
+import static Model.Constants.*;
+
+public class Table {
+
+    /// instance variables
+    private Deck deck;
+    private Dealer dealer;
+    private ArrayList<Player> players;
+    private final DealerPosition dealerPosition;
+    private final ArrayList<PlayerPosition> playerPositionsIterable;
+    private HashMap<Player, Double> playerBalances;
+    private Double houseBalance;
+
+    /// default constructor
+    public Table(int playerCount, int deckCount) {
+        this.deck = new Deck(deckCount);
+        this.dealer = new Dealer(DEFAULT_DEALER_STARTING_CHIPS);
+        this.players = new ArrayList<>();
+        this.dealerPosition = new DealerPosition();
+        this.playerPositionsIterable = new ArrayList<>();
+        this.playerBalances = new HashMap<>();
+        initPlayers(playerCount);
+        initPlayerPositions();
+        assignDefaultPlayerPositions(players);
+        assignDealerPosition(dealer);
+    }
+
+    /** initializes the game state for a new round of Blackjack. */
+    public void startupRoutine() {
+        printNewRoundMessage();
+        logPlayerBalances();
+        logHouseBalance();
+        checkDeck();
+        createPlayerHands();
+        createDealerHand();
+    }
+
+    /** deal each player's initial two cards, computes hand values, and outputs the results. */
+    public void drawRoutine() {
+        determineActingPlayers();
+        dealOpeningCards();
+        calculateHandValues();
+        printActivePlayerHands();
+        printDealerFirstCard();
+    }
+
+    /** handles payouts and resets the game state in preparation for a new round. */
+    public void windDownRoutine() {
+        handlePayouts();
+        printHandResults();
+        clearAllHands();
+    }
+
+    /** initializes each of the players at the table. Throws an exception if more players are allocated than the
+     * table allows. */
+    private void initPlayers(int playerCount) throws PlayerCountException {
+        if(playerCount > DEFAULT_TABLE_POSITIONS) {
+            throw new PlayerCountException("Insufficient table positions for this many players. The default number" +
+                    "of table positions is " + DEFAULT_TABLE_POSITIONS + ".");
+        } else {
+            for (int i = 0; i < playerCount; i++) {
+                Player player = new Player(DEFAULT_PLAYER_STARTING_CHIPS);
+                players.add(player);
+            }
+        }
+    }
+
+    /** initializes each of the player position instances and places them in the iterable arraylist. */
+    private void initPlayerPositions() {
+        for(int i = 1; i < DEFAULT_TABLE_POSITIONS + 1; i++) {
+            PlayerPosition p = new PlayerPosition(i);
+            playerPositionsIterable.add(p);
+        }
+    }
+
+    /** assigns players to their default positions around the table. <strong> Note: </strong> This method assumes
+     * that the player count is less than or equal to the total number of positions available. */
+    private void assignDefaultPlayerPositions(ArrayList<Player> players) {
+        // if singleplayer, place the player directly across from the dealer
+        if(players.size() == 1) {
+            Player singlePlayer = players.getFirst();
+            int middlePosition = DEFAULT_TABLE_POSITIONS / 2 + 1;
+            PlayerPosition defaultPosition = playerPositionsIterable.get(middlePosition);
+            // stores a default position reference in both the position and the player classes
+            singlePlayer.setDefaultPosition(defaultPosition);
+            defaultPosition.setDefaultPlayer(singlePlayer);
+        } else {
+            // if multiplayer, allocate the players to seats at the table from right to left
+            for(int i = 0; i < players.size(); i++) {
+                Player player = players.get(i);
+                PlayerPosition position = playerPositionsIterable.get(i);
+                player.setDefaultPosition(position);
+                position.setDefaultPlayer(player);
+            }
+        }
+    }
+
+    /** assigns the dealer to his/her default position. */
+    private void assignDealerPosition(Dealer dealer) {
+        dealer.setPosition(dealerPosition);
+    }
+
+    /** logs each of the player's opening balances, storing them as key-value pairs. */
+    private void logPlayerBalances() {
+        for(Player player : players) {
+            playerBalances.put(player, player.getChips());
+        }
+    }
+
+    /** logs the house's opening balance. */
+    private void logHouseBalance() {
+        this.houseBalance = dealer.getChips();
+    }
+
+    /** initializes an empty hand for each position at the table. Required before dealing cards. */
+    private void createPlayerHands() {
+        for(PlayerPosition position : playerPositionsIterable) {
+            PlayerHand emptyHand = new PlayerHand(position);
+            position.getHands().add(emptyHand);
+        }
+    }
+
+    /** initializes an empty hand for the dealer. */
+    private void createDealerHand() {
+        DealerHand dealerHand = new DealerHand();
+        dealerPosition.setHand(dealerHand);
+    }
+
+    /** checks to see how many cards remain in the deck and creates a new deck instance if the number is too low.*/
+    private void checkDeck() {
+        if(getDeck().size() < NEW_DECK_THRESHOLD) {
+            deck.createNewDeck();
+        }
+    }
+
+    /** books a standard bet for a player on a given position for a given amount. To be called before the cards are
+     * dealt. */
+    public void bookStandardBet(Player player, PlayerPosition position, double amount) {
+        if(isValidPlayer(player) && isValidPosition(position) && isValidStandardBet(player, amount)) {
+            bookBet(player, position, amount);
+        }
+    }
+
+    /** same as above but allows the player to overdraw on their stack. Required for collecting statistics such as
+     * average profit per hand and expected value as these can be negative. */
+    public void bookSimulationStandardBet(Player player, PlayerPosition position, double amount) {
+        if(isValidPlayer(player) && isValidPosition(position)) {
+            bookBet(player, position, amount);
+        }
+    }
+
+    /** books a bet for a player on a given position for a given amount. */
+    private void bookBet(Player player, PlayerPosition position, double amount) {
+        Bet playerBet = new Bet(amount, false);
+        Map.Entry<Player, Bet> entry = Map.entry(player, playerBet);
+            /* a key-value pair is stored in the hand's log so it can be accessed later when payouts are calculated and
+            transferred. Also note: arraylists maintain insertion order so we can index the list by the position's
+            number. */
+        position.getHands().getFirst().getPairs().add(entry);
+        player.dispenseChips(amount);
+        System.out.println("Your bet has been placed! You have " + (int) player.getChips() +
+                " chips remaining.");
+    }
+
+    /** */
+    public void bookDoubleDownBet(Player player, PlayerPosition position, double amount) {
+
+    }
+
+    /** books an insurance bet for a player on a given position for a given amount. To be called AFTER the cards are
+     * dealt. */
+    public void bookInsuranceBet(Player player, PlayerPosition position, double amount) {
+        if(isValidInsuranceBet(player, position, amount)) {
+            InsuranceBet iBet = new InsuranceBet(amount, true);
+            Map.Entry<Player, Bet> entry = Map.entry(player, iBet);
+            position.getHands().getFirst().getPairs().add(entry);
+            player.dispenseChips(amount);
+            System.out.println("Your insurance bet has been placed! You have " + (int) player.getChips() +
+                    " chips remaining.");
+        } else {
+            // might want to fine grain error message.
+            System.out.println("Insurance bet request invalid.");
+        }
+    }
+
+    /** validates a given player by verifying that they are registered at the table. */
+    private boolean isValidPlayer(Player player) {
+        for(Player playerFromList : players) {
+            if(player.equals(playerFromList))
+                return true;
+        }
+        return false;
+    }
+
+    /** validates a given position by verifying that it is registered at the table. */
+    private boolean isValidPosition(PlayerPosition position) {
+        for(PlayerPosition positionFromList : playerPositionsIterable) {
+            if(position.equals(positionFromList))
+                return true;
+        }
+        return false;
+    }
+
+    /** validates a given bet size by verifying that it is greater than the minimum allowed while also less than the
+     * players total chips. */
+    private boolean isValidStandardBet(Player player, double betAmount) {
+        if(betAmount < DEFAULT_MIN_BET_SIZE) {
+            System.out.println("Bet size of: " + (int) betAmount + " is less than the minimum bet size: "
+                    + DEFAULT_MIN_BET_SIZE + ".");
+            return false;
+        } else if(betAmount > player.getChips()) {
+            System.out.println("Bet size of: " + (int) betAmount + " exceeds player's total chips: "
+                    + (int) player.getChips() + ".");
+            return false;
+        }
+        return true;
+    }
+
+    /** validates a given insurance bet by verifying that a standard bet already exists on the selected position and
+     * that the insurance bet amount is less than or equal to half the size of the standard bet. */
+    private boolean isValidInsuranceBet(Player player, PlayerPosition position, double amount) {
+        double playerStandardBet = playerHasBet(player, position);
+        return playerStandardBet != 0 && amount <= (playerStandardBet / 2);
+    }
+
+    /** returns true if the given player already has a standard bet on a hand at the given position. Returns false
+     * otherwise. Assumes that the player only has ONE bet on the given position. */
+    private double playerHasBet(Player player, PlayerPosition position) {
+        for(PlayerHand hand : position.getHands()) {
+            for(Map.Entry<Player,Bet> pair : hand.getPairs()) {
+                if(player.equals(pair.getKey())) {
+                    return pair.getValue().getAmount();
+                }
+            }
+        }
+        return 0;
+    }
+
+    /** returns a list of the active hands at the table. */
+    private ArrayList<PlayerHand> getActiveHands() {
+        ArrayList<PlayerHand> activeHands = new ArrayList<>();
+        for(PlayerPosition position : playerPositionsIterable) {
+            for(PlayerHand hand : position.getHands()) {
+                if(hand.hasBet()) {
+                    activeHands.add(hand);
+                }
+            }
+        }
+        return activeHands;
+    }
+
+    /** clears all hands at the table (along with their associated cards and player-bet pairs). */
+    private void clearAllHands() {
+        clearPlayerHands();
+        clearDealerHand();
+    }
+
+    /** private helper method. Clears all player hands at the table. */
+    private void clearPlayerHands() {
+        for(PlayerPosition position : playerPositionsIterable) {
+            position.clearHands();
+        }
+    }
+
+    /** private helper method. Clears the dealer's hand. */
+    private void clearDealerHand() {
+        dealerPosition.clearHand();
+    }
+
+    /** deals first two cards to all active positions including the dealer. */
+    private void dealOpeningCards() {
+        dealToActivePositions();
+        dealToDealer();
+        dealToActivePositions();
+        dealToDealer();
+    }
+
+    /** deals a single card to the dealer's hand. */
+    private void dealToDealer() {
+        getDealerHand().receiveCard(deck.deal());
+    }
+
+    /** deals a single card to each position that has a bet. */
+    private void dealToActivePositions() {
+        for(PlayerPosition position : playerPositionsIterable) {
+            for(PlayerHand hand : position.getHands()) {
+                if(hand.hasBet()) {
+                    hand.receiveCard(deck.deal());
+                }
+            }
+        }
+    }
+
+    /** sets the acting player for each hand at the table. This should usually be the default player. But if the
+     * default player has not bet on their own position, then the acting player is simply the first to have bet on that
+     * position. */
+    private void determineActingPlayers() {
+        for(PlayerPosition position : playerPositionsIterable) {
+            for(PlayerHand hand : position.getHands()) {
+                if(hand.hasBet()) {
+                    if(position.isDefaultPlayerInHand()) {
+                        hand.setActingPlayer(position.getDefaultPlayer());
+                    } else {
+                        hand.setActingPlayer(hand.getPairs().getFirst().getKey());
+                    }
+                }
+            }
+        }
+    }
+
+    /** deals a card to a hand before setting its value. */
+    public void hit(Hand hand) {
+        if(!hand.isBust()) {
+            hand.receiveCard(deck.deal());
+            hand.setHandValue(deck);
+        } else {
+            System.out.println("BUST!");
+        }
+    }
+
+    /** calculates the hand value for all active hands at the table. */
+    private void calculateHandValues() {
+        for(PlayerHand hand : getActiveHands()) {
+            hand.setHandValue(deck);
+        }
+        getDealerHand().setHandValue(deck);
+    }
+
+    /** executes the dealer's strategy. */
+    public void executeDealerStrategy() {
+        while(!Objects.equals(dealer.executeStrategy(), STAND)) {
+            handleDealerAction(dealer.executeStrategy());
+        }
+        printDealerHand();
+    }
+
+    /** makes the player hit up to a specific playerHand value. */
+    public void executePlayerStrategy(PlayerHand playerHand, DealerHand dealerHand) {
+
+        // defines the acting player in a given hand
+        Player actingPlayer = playerHand.getActingPlayer();
+
+        // need to check that the hand is not bust to prevent null pointer exceptions in the strategy class
+        while(!playerHand.isBust() && !actingPlayer.executeStrategy(playerHand, dealerHand).equals(STAND)) {
+                handlePlayerAction(actingPlayer, playerHand, actingPlayer.executeStrategy(playerHand, dealerHand));
+        }
+        printActivePlayerHands();
+    }
+
+    /** executes the player strategy for all active hands at the table. */
+    public void executePlayerStrategyForAll() {
+        for(PlayerHand hand : getActiveHands()) {
+            executePlayerStrategy(hand, dealer.getPosition().getHand());
+        }
+    }
+
+    public void handleDealerAction(String action) {
+        if(action.equals(HIT)) {
+            hit(dealer.getPosition().getHand());
+        }
+    }
+
+    public void handlePlayerAction(Player player, PlayerHand hand, String action) {
+        switch (action) {
+            case HIT -> hit(hand);
+            case DOUBLE ->
+                // book double down bet
+                    hit(hand);
+            case INSURANCE ->
+                // book insurance bet
+                    bookInsuranceBet(player, hand.getPosition(), DEFAULT_PLAYER_INSURANCE_BET);
+            case STAND -> {}
+        };
+    }
+
+    /// REFACTOR REQUIRED
+
+    /** processes the non-insurance payouts for each active hand at the table. */
+    private void handlePayouts() {
+        for(PlayerHand hand : getActiveHands()) {
+            for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
+                if(!hand.isBust() && (getDealerHand().isBust() || hand.getHandValue() >
+                        getDealerHand().getHandValue())) {
+
+                    if(!(pair.getValue() instanceof InsuranceBet)) {
+
+                        double payout;
+
+                        if(hand.getHandValue() == BLACKJACK_CONSTANT) {
+                            payout = pair.getValue().getAmount() * (1 +
+                                    ((double) DEFAULT_BLACKJACK_PAYOUT_DENOMINATOR / DEFAULT_BLACKJACK_PAYOUT_NUMERATOR));
+                        } else {
+                            payout = pair.getValue().getAmount() * (1 + DEFAULT_PAYOUT_RATIO);
+                        }
+                        dealer.dispenseChips(payout - pair.getValue().getAmount());
+                        pair.getKey().receiveChips(payout);
+                    }
+                } else if (!hand.isBust() && hand.getHandValue() == getDealerHand().getHandValue()) {
+
+                    if (!(pair.getValue() instanceof InsuranceBet)) {
+                        // refund chips;
+                        pair.getKey().receiveChips(pair.getValue().getAmount());
+                    }
+                } else {
+                    dealer.receiveChips(pair.getValue().getAmount());
+                }
+            }
+        }
+    }
+
+    /** processes the insurance payouts for each active hand at the table. */
+    private void handleInsurancePayouts() {
+
+    }
+
+    private void evaluateHand(PlayerHand playerHand, DealerHand dealerHand) {
+
+    }
+
+    public Deck getDeck() {
+        return deck;
+    }
+
+    public int getNumberOfPositions() {
+        return playerPositionsIterable.size();
+    }
+
+    public ArrayList<PlayerPosition> getPlayerPositionsIterable() {
+        return playerPositionsIterable;
+    }
+
+    public Dealer getDealer() {
+        return dealer;
+    }
+
+    public DealerPosition getDealerPosition() {
+        return dealerPosition;
+    }
+
+    public DealerHand getDealerHand() {
+        return dealerPosition.getHand();
+    }
+
+    public ArrayList<Player> getPlayers() {
+        return players;
+    }
+
+    /** may be required if a player decides to leave the game. */
+    public void setPlayers(ArrayList<Player> players) {
+        this.players = players;
+    }
+
+    // prints welcome message
+    public void printWelcomeMessage() {
+        System.out.println("********************************");
+
+        System.out.println("***** WELCOME TO BLACKJACK *****");
+
+        System.out.println("********************************");
+    }
+
+    // prints new round message
+    public void printNewRoundMessage() {
+        System.out.print("\n");
+        System.out.println("---- NEW ROUND ----");
+    }
+
+    // prints all active player hands at the table
+    public void printActivePlayerHands() {
+        for(PlayerPosition position : playerPositionsIterable) {
+            for(PlayerHand hand : position.getHands()) {
+                if(hand.hasBet()) {
+                    System.out.println("Position: " + position.getPositionNumber());
+                    System.out.println("----" + " Hand: " + hand + " Hand value: " + hand.getHandValue() + ".");
+                    if(hand.isBust()) {
+                        System.out.println("BUST!");
+                    }
+                }
+            }
+        }
+    }
+
+    // prints the dealer's first card and its corresponding value
+    public void printDealerFirstCard() {
+        System.out.println("Position: 0 (Dealer)");
+        System.out.println("----" + " Hand: " + getDealerHand().getCards().getFirst() + " Hand Value: " +
+                getDealerHand().getCards().getFirst().getValue() + "." + "\n");
+    }
+
+    // print the dealer's hand
+    public void printDealerHand() {
+        System.out.println("Position: 0 (Dealer)");
+        System.out.println("----" + " Hand: " + getDealerHand().toString() + " Hand Value: " +
+                getDealerHand().getHandValue()
+                + "." + "\n");
+        if(getDealerHand().isBust()) {
+            System.out.println("BUST!");
+        }
+    }
+
+    // prints results
+    public void printHandResults() {
+        System.out.println("---- RESULTS ----");
+        printPlayerResults();
+        printHouseResults();
+        System.out.println("---- END OF ROUND ----");
+    }
+
+    public void printPlayerResults() {
+        for(Player player : players) {
+            System.out.println("Player: " + player);
+            System.out.println("Starting Balance: " + playerBalances.get(player).intValue() + " Closing Balance: "
+                    + (int) player.getChips());
+            System.out.println("Profit (Loss): " + (int) (player.getChips() - playerBalances.get(player)) + "\n");
+        }
+    }
+
+    public void printHouseResults() {
+        System.out.println("Player: House");
+        System.out.println("Starting Balance: " + houseBalance.intValue() + " Closing Balance: "
+                + (int) dealer.getChips());
+        System.out.println("Profit (Loss): " + (int) (dealer.getChips() - houseBalance) + "\n");
+    }
+}

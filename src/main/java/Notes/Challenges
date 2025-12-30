@@ -1,0 +1,35 @@
+Core Challenges
+
+-- Object Ownership & Structure
+Do players "own" their hands? What if other players bet on their hand? What if the dealer needs to access the bet(s)
+associated with their hand? What if the player elects not to bet on their hand or they bet on other players hands?
+Can players use one another's empty positions?
+
+The solution to these problems was to make Table the master object and populate it with Position objects. There are two
+disjoint Position objects - Player Position and Dealer Position. Player Positions are what the players can actually bet
+on and these contain Hands. The reason why Players do not directly store an instance of their Hand is because Hands can
+be split (leading to the presence of multiple hands) and because other players can technically allowed to "back-bet" on
+their hand. For these reasons, it made sense to use the Table-Position model as opposed to the Player-Hand model.
+
+-- Dealer vs. Player Functions
+
+-- Dealing with the Ace Card
+
+---- Sub-Problems
+---- Dealer Position vs. Player Position
+---- Dealer Hand vs. Player Hand
+
+-- Logging Bets
+
+---- Sub-Problems:
+---- Acting Player vs. Default Player
+
+    /* -- deprecated data structures --
+     * These don't work because all implementations of the Map interface in Java enforce key uniqueness. Player's can
+     * theoretically have multiple bets on a position by doubling down and buying insurance so these data structures
+     * can't be used in the PlayerHand class.
+     *
+     * private TreeMap<Player, Bet> pairs;
+     * private HashMap<Player, Bet> pairs; */
+
+-- The Shuffling Algorithm
