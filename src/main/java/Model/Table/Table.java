@@ -63,7 +63,8 @@ public class Table {
 
     /** handles payouts and resets the game state in preparation for a new round. */
     public void windDownRoutine() {
-        handlePayouts();
+        handleRegularPayouts();
+        handleInsurancePayouts();
         printHandResults();
         clearAllHands();
     }
@@ -387,51 +388,70 @@ public class Table {
                 // book insurance bet
                     bookInsuranceBet(player, hand.getPosition(), DEFAULT_PLAYER_INSURANCE_BET);
             case STAND -> {}
-        };
+        }
     }
 
-    /// REFACTOR REQUIRED
-
     /** processes the non-insurance payouts for each active hand at the table. */
-    private void handlePayouts() {
+    private void handleRegularPayouts() {
         for(PlayerHand hand : getActiveHands()) {
             for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
-                if(!hand.isBust() && (getDealerHand().isBust() || hand.getHandValue() >
-                        getDealerHand().getHandValue())) {
-
-                    if(!(pair.getValue() instanceof InsuranceBet)) {
-
-                        double payout;
-
-                        if(hand.getHandValue() == BLACKJACK_CONSTANT) {
-                            payout = pair.getValue().getAmount() * (1 +
-                                    ((double) DEFAULT_BLACKJACK_PAYOUT_DENOMINATOR / DEFAULT_BLACKJACK_PAYOUT_NUMERATOR));
-                        } else {
-                            payout = pair.getValue().getAmount() * (1 + DEFAULT_PAYOUT_RATIO);
-                        }
-                        dealer.dispenseChips(payout - pair.getValue().getAmount());
-                        pair.getKey().receiveChips(payout);
-                    }
-                } else if (!hand.isBust() && hand.getHandValue() == getDealerHand().getHandValue()) {
-
-                    if (!(pair.getValue() instanceof InsuranceBet)) {
-                        // refund chips;
-                        pair.getKey().receiveChips(pair.getValue().getAmount());
-                    }
-                } else {
-                    dealer.receiveChips(pair.getValue().getAmount());
-                }
+                handlePlayerWin(hand, pair);
+                handlePlayerPush(hand, pair);
+                handlePlayerLoss(hand, pair);
             }
+        }
+    }
+
+    /** process a player's bet on a hand if it wins against the dealer. */
+    public void handlePlayerWin(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+        if(!hand.isBust() && (getDealerHand().isBust() || hand.getHandValue() >
+                getDealerHand().getHandValue())) {
+            if(!(pair.getValue() instanceof InsuranceBet)) {
+                double payout;
+                if(hand.getHandValue() == BLACKJACK_CONSTANT) {
+                    payout = pair.getValue().getAmount() * (1 +
+                            ((double) DEFAULT_BLACKJACK_PAYOUT_DENOMINATOR / DEFAULT_BLACKJACK_PAYOUT_NUMERATOR));
+                } else {
+                    payout = pair.getValue().getAmount() * (1 + DEFAULT_PAYOUT_RATIO);
+                }
+                dealer.dispenseChips(payout - pair.getValue().getAmount());
+                pair.getKey().receiveChips(payout);
+            }
+        }
+    }
+
+    /** processes a player's bet on a hand if it pushes with the dealer. (ie. the two are equal in value) */
+    public void handlePlayerPush(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+        if(!hand.isBust() && hand.getHandValue() == getDealerHand().getHandValue()) {
+            if(!(pair.getValue() instanceof InsuranceBet)) {
+                // refund chips;
+                pair.getKey().receiveChips(pair.getValue().getAmount());
+            }
+        }
+    }
+
+    /** processes a player's bet on a hand if it loses against the dealer. */
+    public void handlePlayerLoss(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+        if(hand.isBust() || getDealerHand().getHandValue() > hand.getHandValue()) {
+            dealer.receiveChips(pair.getValue().getAmount());
         }
     }
 
     /** processes the insurance payouts for each active hand at the table. */
     private void handleInsurancePayouts() {
-
-    }
-
-    private void evaluateHand(PlayerHand playerHand, DealerHand dealerHand) {
-
+        for(PlayerHand hand : getActiveHands()) {
+            for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
+                if(pair.getValue() instanceof InsuranceBet) {
+                    if(getDealerHand().getHandValue() == BLACKJACK_CONSTANT) {
+                        double payout = pair.getValue().getAmount() * (1 + DEFAULT_INSURANCE_RATIO);
+                        dealer.dispenseChips(payout - pair.getValue().getAmount());
+                        pair.getKey().receiveChips(payout);
+                    } else {
+                        dealer.receiveChips((pair.getValue().getAmount()));
+                    }
+                }
+            }
+        }
     }
 
     public Deck getDeck() {
