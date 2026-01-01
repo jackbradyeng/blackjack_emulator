@@ -7,6 +7,7 @@ import java.util.Objects;
 import Exceptions.PlayerCountException;
 import Model.Actors.Dealer;
 import Model.Actors.Player;
+import Model.Cards.Ace;
 import Model.Cards.Deck;
 import Model.Table.Bets.Bet;
 import Model.Table.Bets.InsuranceBet;
@@ -182,7 +183,7 @@ public class Table {
     }
 
     /** returns a list of the active hands at the table. */
-    private ArrayList<PlayerHand> getActiveHands() {
+    public ArrayList<PlayerHand> getActiveHands() {
         ArrayList<PlayerHand> activeHands = new ArrayList<>();
         for(PlayerPosition position : playerPositionsIterable) {
             for(PlayerHand hand : position.getHands()) {
@@ -223,6 +224,11 @@ public class Table {
     /** deals a single card to the dealer's hand. */
     private void dealToDealer() {
         getDealerHand().receiveCard(deck.deal());
+    }
+
+    /** returns whether the dealer's face-up card is an ace or not. */
+    public boolean dealerHasAce() {
+        return (getDealerHand().getCards().getFirst() instanceof Ace);
     }
 
     /** deals a single card to each position that has a bet. */
@@ -387,7 +393,7 @@ public class Table {
         for(PlayerHand hand : getActiveHands()) {
             for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
                 if(pair.getValue() instanceof InsuranceBet) {
-                    if(getDealerHand().getHandValue() == BLACKJACK_CONSTANT) {
+                    if(getDealerHand().getHandValue() == BLACKJACK_CONSTANT && dealerHasAce()) {
                         double payout = pair.getValue().getAmount() * (1 + DEFAULT_INSURANCE_RATIO);
                         dealer.dispenseChips(payout - pair.getValue().getAmount());
                         pair.getKey().receiveChips(payout);

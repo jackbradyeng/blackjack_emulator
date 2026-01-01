@@ -3,9 +3,7 @@ package Controller;
 import java.util.Scanner;
 import Model.Actors.*;
 import Model.Table.*;
-import Model.Table.Hands.DealerHand;
 import Model.Table.Hands.PlayerHand;
-import Model.Table.Positions.PlayerPosition;
 import static Model.Constants.*;
 
 public class Controller {
@@ -52,22 +50,40 @@ public class Controller {
 
     /// Interactive Game Loop
     public void runGameLoop() {
+        table.printWelcomeMessage();
 
         while(isRunning) {
             table.startupRoutine();
             initialWager();
             table.drawRoutine();
             playerActions();
-            System.out.println("PLAYER ACTIONS HAVE BEEN PROCESSED" + "\n");
+            gamePause();
             table.printDealerHand();
             table.executeDealerStrategy();
             table.windDownRoutine();
         }
     }
 
+    /** initiates a countdown before revealing the dealer's hand. Creates a bit of suspense. */
+    private void gamePause() {
+        System.out.println("Dealer drawing in...");
+        threadSleep();
+        System.out.println("3...");
+        threadSleep();
+        System.out.println("2...");
+        threadSleep();
+        System.out.println("1...");
+    }
+
+    /** thread sleep routine.*/
+    private void threadSleep() {
+        try {Thread.sleep(DEFAULT_COUNTDOWN_TIME);}
+        catch (InterruptedException i) {Thread.currentThread().interrupt();}
+    }
+
     /** prints summary statistics following a round of blackjack, including average profit per hand and the expected
      * value percentage. */
-    public void printStatistics(int handNumber, double runningProfit, double averageProfitPerHand,
+    private void printStatistics(int handNumber, double runningProfit, double averageProfitPerHand,
                                 double expectedValuePerHand) {
         System.out.print("\n");
         System.out.println("---- Summary Statistics ----");
@@ -77,39 +93,28 @@ public class Controller {
         System.out.println("Expected Value Per Hand: " + expectedValuePerHand * 100 + "%");
     }
 
-    // parameterized method for simulations
-    public void initialWager(boolean placeBet, Player player, double amount, int position) {
-        if(placeBet) {
-            table.bookStandardBet(player, table.getPlayerPositionsIterable().get(position - 1), amount);
-            System.out.println("Bet placed on position " + position + " for " + amount + " chips.");
-        }
-    }
-
     // initializes the first round of betting
     // non-parameterized method for regular command line interactions
-    public void initialWager() {
+    private void initialWager() {
 
         // flag used to determine when a player has waged all their bets
         boolean initialWager;
 
         // initial betting round
         for(Player player : table.getPlayers()) {
-
             initialWager = true;
-
             while(initialWager) {
 
                 System.out.println("Would you like to place a bet? Enter Y/N");
                 String response = scanner.next();
 
                 if (response.equalsIgnoreCase("Y")) {
-
-                    System.out.println("Specify your bet size. You have " + (int) player.getChips() + " chips.");
-                    int playerBet = scanner.nextInt();
+                    System.out.println("Specify your bet size. You have " + (int) player.getChips() + " chips." +
+                            " The minimum bet size is " + DEFAULT_MIN_BET_SIZE + " chips.");
+                    double playerBet = scanner.nextDouble();
                     System.out.println("Which position would you like to bet on? There are " +
                                 table.getNumberOfPositions() + " total positions.");
                     int position = scanner.nextInt();
-
                     table.bookStandardBet(player, table.getPlayerPositionsIterable().get(position - 1), playerBet);
 
                 } else if (response.equalsIgnoreCase("N")) {
@@ -121,65 +126,65 @@ public class Controller {
         }
     }
 
-    // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
-    public void playerActions() {
-
-        // store an instance of the dealer hand for easy reference
-        DealerHand dealerHand = table.getDealerPosition().getHand();
-
-        for(PlayerPosition position : table.getPlayerPositionsIterable()) {
-            for(PlayerHand hand : position.getHands()) {
-                if(hand.hasBet()) {
-                    System.out.println("Position no. " + hand.getPosition().getPositionNumber());
-
-                    boolean playerCanAct = true;
-                    boolean hasBoughtInsurance = false;
-
-                    while(playerCanAct) {
-
-                        if(hand.isBust()) {
-                            playerCanAct = false;
-                        } else if(hand.isBlackjack()) {
-                            System.out.println("Blackjack!");
-                            if(hand.hasInsuranceOption(dealerHand) & !hasBoughtInsurance) {
-                                // handleInsuranceCase
-                            }
-                            playerCanAct = false;
-                        } else {
-                            System.out.println("Player " + hand.getActingPlayer() + " to act. Select an action:");
-
-                            if(hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand)) {
-                                System.out.println("HIT | STAND | SPLIT | INSURANCE");
-                            } else if(hand.hasSplitOption() && !hand.hasInsuranceOption(dealerHand)) {
-                                System.out.println("HIT | STAND | SPLIT");
-                            } else if(!hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand)) {
-                                System.out.println("HIT | STAND | INSURANCE");
-                            } else {
-                                System.out.println("HIT | STAND");
-                            }
-                            String playerAction = scanner.next();
-                            playerCanAct = handlePlayerAction(playerAction, hand);
-                        }
-                    }
-                }
+    /** handles cases where the player has a natural blackjack in non-simulation games. */
+    private boolean handleBlackjackCase(PlayerHand hand) {
+        if(!table.dealerHasAce()) {
+            return false;
+        } else {
+            System.out.println("Would you like to buy insurance? (Y/N)");
+            String playerAction = scanner.next();
+            if(playerAction.equalsIgnoreCase("Y")) {
+                handleInsuranceCase(hand);
+                return false;
+            } else if(playerAction.equalsIgnoreCase("N")) {
+                return false;
+            } else {
+                System.out.println("Please enter a valid input.");
+                return true;
             }
         }
     }
 
-    private boolean handlePlayerAction(String action, PlayerHand hand) {
-        if(action.equalsIgnoreCase("HIT")) {
-            table.hit(hand);
-            table.printActivePlayerHands();
-            table.printDealerHand();
-            return !hand.isBust();
-        } else if(action.equalsIgnoreCase("STAND")) {
-            return false;
-        } else if(action.equalsIgnoreCase("INSURANCE")) {
-            return true;
-        }
-        else {
-            System.out.println("Please enter a valid response.");
-            return true;
+    /** handles cases where the player orders insurance in non-simulation games. */
+    private void handleInsuranceCase(PlayerHand hand) {
+        table.handlePlayerAction(hand.getActingPlayer(), hand, INSURANCE);
+    }
+
+    // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
+    private void playerActions() {
+        for(PlayerHand hand : table.getActiveHands()) {
+            System.out.println("Position no. " + hand.getPosition().getPositionNumber());
+
+            boolean playerCanAct = true;
+
+            while(playerCanAct) {
+                if(hand.isBust()) {
+                    playerCanAct = false;
+                } else if(hand.isBlackjack()) {
+                    playerCanAct = handleBlackjackCase(hand);
+                } else {
+                    System.out.println("Player " + hand.getActingPlayer() + " to act. Select an action:");
+                    if(hand.isBlackjack()) {
+                      handleBlackjackCase(hand);
+                    } else if (hand.hasSplitOption() && table.dealerHasAce()) {
+                        System.out.println("HIT | STAND | SPLIT | INSURANCE");
+                    } else if(hand.hasSplitOption() && !table.dealerHasAce()) {
+                        System.out.println("HIT | STAND | SPLIT");
+                    } else if(!hand.hasSplitOption() && table.dealerHasAce()) {
+                        System.out.println("HIT | STAND | INSURANCE");
+                    } else {
+                        System.out.println("HIT | STAND");
+                    }
+                    String playerAction = scanner.next();
+                    table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
+                    table.printActivePlayerHands();
+                    table.printDealerFirstCard();
+
+                    if(playerAction.equalsIgnoreCase(STAND)) {
+                        playerCanAct = false;
+                    }
+                }
+            }
         }
     }
 }

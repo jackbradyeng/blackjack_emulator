@@ -41,4 +41,7 @@ public final class Constants {
 
     // simulation constants
     public static final int DEFAULT_NUMBER_OF_ITERATIONS = 15000;
+
+    // command line constants
+    public static final int DEFAULT_COUNTDOWN_TIME = 1000;
 }
