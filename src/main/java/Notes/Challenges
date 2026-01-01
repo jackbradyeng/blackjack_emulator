@@ -23,6 +23,8 @@ their hand. For these reasons, it made sense to use the Table-Position model as 
 
 ---- Sub-Problems:
 ---- Acting Player vs. Default Player
+---- Standard Bets vs. Insurance Bets
+---- Double Down Bets
 
     /* -- deprecated data structures --
      * These don't work because all implementations of the Map interface in Java enforce key uniqueness. Player's can

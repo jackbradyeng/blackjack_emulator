@@ -41,7 +41,7 @@ public class InsuranceBetProcessor implements BetProcessor {
 
     /** books an insurance bet for a player on a given position for a given amount. */
     private void bookBet(Player player, PlayerPosition position, double amount) {
-        InsuranceBet iBet = new InsuranceBet(amount, true);
+        InsuranceBet iBet = new InsuranceBet(amount);
         Map.Entry<Player, Bet> entry = Map.entry(player, iBet);
         position.getHands().getFirst().getPairs().add(entry);
         player.dispenseChips(amount);

@@ -19,6 +19,7 @@ public class StandardBetValidator extends BetValidator {
         this.amount = amount;
     }
 
+    /** determines if the given player, position, and bet amount are valid. */
     public boolean isValid() {
         if(isSimulation) {
             return isValidSimulationBet();
@@ -30,28 +31,29 @@ public class StandardBetValidator extends BetValidator {
     /** books a standard bet for a player on a given position for a given amount. To be called before the cards are
      * dealt. */
     private boolean isValidStandardBet() {
-        return isValidPlayer(player) && isValidPosition(position) && isValidStandardBet(player, amount);
+        return isValidPlayer(player) && isValidPosition(position) && isValidBetSize(amount)
+                && hasSufficientChips(player, amount);
     }
 
     /** same as above but allows the player to overdraw on their stack. Required for collecting statistics such as
      * average profit per hand and expected value as these can be negative. */
     private boolean isValidSimulationBet() {
-        return isValidPlayer(player) && isValidPosition(position);
+        return isValidPlayer(player) && isValidPosition(position) && isValidBetSize(amount);
     }
 
-    /** validates a given bet size by verifying that it is greater than the minimum allowed while also less than the
-     * players total chips. */
-    private boolean isValidStandardBet(Player player, double betAmount) {
+    /** validates a given bet size by verifying that it is greater than the minimum allowed for a standard bet. */
+    private boolean isValidBetSize(double betAmount) {
         if(betAmount < DEFAULT_MIN_BET_SIZE) {
             System.out.println("Bet size of: " + (int) betAmount + " is less than the minimum bet size: "
                     + DEFAULT_MIN_BET_SIZE + ".");
             return false;
-        } else if(betAmount > player.getChips()) {
-            System.out.println("Bet size of: " + (int) betAmount + " exceeds player's total chips: "
-                    + (int) player.getChips() + ".");
-            return false;
+        } else {
+            return true;
         }
-        return true;
     }
 
+    /** validates that the player has sufficient chips to place a particular bet. */
+    protected boolean hasSufficientChips(Player player, double amount) {
+        return player.getChips() >= amount;
+    }
 }

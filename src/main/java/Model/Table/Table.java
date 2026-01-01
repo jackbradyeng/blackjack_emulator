@@ -15,9 +15,9 @@ import Model.Table.Hands.Hand;
 import Model.Table.Hands.PlayerHand;
 import Model.Table.Positions.DealerPosition;
 import Model.Table.Positions.PlayerPosition;
+import Model.Table.Processors.DoubleBetProcessor;
 import Model.Table.Processors.InsuranceBetProcessor;
 import Model.Table.Processors.StandardBetProcessor;
-
 import static Model.Constants.*;
 
 public class Table {
@@ -175,8 +175,10 @@ public class Table {
     /** doubles the player's existing bet at a given position for that amount. Players can only double down once and if
      * they do, they can only hit one more time. If the player has already hit, they cannot double down. Also, if the
      * player has already made a natural blackjack, they cannot double down. */
-    public void bookDoubleDownBet(Player player, PlayerPosition position) {
-
+    public void bookDoubleDownBet(Player player, PlayerPosition position, PlayerHand hand) {
+        DoubleBetProcessor processor = new DoubleBetProcessor(isSimulation, players, playerPositionsIterable,
+                player, position, hand);
+        processor.process();
     }
 
     /** returns a list of the active hands at the table. */
@@ -284,8 +286,19 @@ public class Table {
         Player actingPlayer = playerHand.getActingPlayer();
 
         // need to check that the hand is not bust to prevent null pointer exceptions in the strategy class
-        while(!playerHand.isBust() && !actingPlayer.executeStrategy(playerHand, dealerHand).equals(STAND)) {
-                handlePlayerAction(actingPlayer, playerHand, actingPlayer.executeStrategy(playerHand, dealerHand));
+        while(!playerHand.isBust()) {
+
+            System.out.println("---- PLAYER STRATEGY IS: " + actingPlayer.invokeStrategy(playerHand, dealerHand) + " ----");
+
+            // players are only permitted to hit once after doubling down so the loop should terminate after doing so
+            if(actingPlayer.invokeStrategy(playerHand, dealerHand).equals(DOUBLE)) {
+                handlePlayerAction(actingPlayer, playerHand, actingPlayer.invokeStrategy(playerHand, dealerHand));
+                break;
+            } else if(actingPlayer.invokeStrategy(playerHand, dealerHand).equals(STAND)) {
+                break;
+            } else {
+                handlePlayerAction(actingPlayer, playerHand, actingPlayer.invokeStrategy(playerHand, dealerHand));
+            }
         }
         printActivePlayerHands();
     }
@@ -305,14 +318,21 @@ public class Table {
 
     public void handlePlayerAction(Player player, PlayerHand hand, String action) {
         switch (action) {
-            case HIT -> hit(hand);
-            case DOUBLE ->
+            case HIT:
+                hit(hand);
+                break;
+            case DOUBLE:
                 // book double down bet
-                    hit(hand);
-            case INSURANCE ->
+                bookDoubleDownBet(player, hand.getPosition(), hand);
+                hit(hand);
+                break;
+            case INSURANCE:
                 // book insurance bet
-                    bookInsuranceBet(player, hand.getPosition(), DEFAULT_PLAYER_INSURANCE_BET);
-            case STAND -> {}
+                System.out.println("----INSURANCE BET BOOKED!----");
+                bookInsuranceBet(player, hand.getPosition(), DEFAULT_PLAYER_INSURANCE_BET);
+                break;
+            case STAND: {}
+                // do nothing
         }
     }
 

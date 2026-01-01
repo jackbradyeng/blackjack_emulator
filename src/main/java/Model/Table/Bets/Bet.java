@@ -4,7 +4,7 @@ public class Bet {
 
     private double amount;
 
-    public Bet(double amount, boolean isInsurance) {
+    public Bet(double amount) {
         this.amount = amount;
     }
 

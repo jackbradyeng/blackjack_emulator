@@ -23,7 +23,7 @@ public class Player extends Actor {
         this.defaultPosition = defaultPosition;
     }
 
-    public String executeStrategy(PlayerHand playerHand, DealerHand dealerHand) {
+    public String invokeStrategy(PlayerHand playerHand, DealerHand dealerHand) {
         return getStrategy().executeStrategy(playerHand, dealerHand);
     }
 
