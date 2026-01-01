@@ -12,7 +12,7 @@ public class TableTesting {
     Table table;
 
     public TableTesting() {
-        table = new Table(DEFAULT_NUMBER_OF_PLAYERS, DEFAULT_NUMBER_OF_DECKS);
+        table = new Table(DEFAULT_NUMBER_OF_PLAYERS, DEFAULT_NUMBER_OF_DECKS, true);
     }
 
     /** Tests that the player array size returns as expected in a single-player game. */

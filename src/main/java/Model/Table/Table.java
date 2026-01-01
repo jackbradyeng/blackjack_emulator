@@ -15,11 +15,15 @@ import Model.Table.Hands.Hand;
 import Model.Table.Hands.PlayerHand;
 import Model.Table.Positions.DealerPosition;
 import Model.Table.Positions.PlayerPosition;
+import Model.Table.Processors.InsuranceBetProcessor;
+import Model.Table.Processors.StandardBetProcessor;
+
 import static Model.Constants.*;
 
 public class Table {
 
     /// instance variables
+    private boolean isSimulation;
     private Deck deck;
     private Dealer dealer;
     private ArrayList<Player> players;
@@ -29,7 +33,8 @@ public class Table {
     private Double houseBalance;
 
     /// default constructor
-    public Table(int playerCount, int deckCount) {
+    public Table(int playerCount, int deckCount, boolean isSimulation) {
+        this.isSimulation = isSimulation;
         this.deck = new Deck(deckCount);
         this.dealer = new Dealer(DEFAULT_DEALER_STARTING_CHIPS);
         this.players = new ArrayList<>();
@@ -144,7 +149,7 @@ public class Table {
         dealerPosition.setHand(dealerHand);
     }
 
-    /** checks to see how many cards remain in the deck and creates a new deck instance if the number is too low.*/
+    /** checks to see how many cards remain in the deck and creates a new deck instance if the number is too low. */
     private void checkDeck() {
         if(getDeck().size() < NEW_DECK_THRESHOLD) {
             deck.createNewDeck();
@@ -154,104 +159,24 @@ public class Table {
     /** books a standard bet for a player on a given position for a given amount. To be called before the cards are
      * dealt. */
     public void bookStandardBet(Player player, PlayerPosition position, double amount) {
-        if(isValidPlayer(player) && isValidPosition(position) && isValidStandardBet(player, amount)) {
-            bookBet(player, position, amount);
-        }
-    }
-
-    /** same as above but allows the player to overdraw on their stack. Required for collecting statistics such as
-     * average profit per hand and expected value as these can be negative. */
-    public void bookSimulationStandardBet(Player player, PlayerPosition position, double amount) {
-        if(isValidPlayer(player) && isValidPosition(position)) {
-            bookBet(player, position, amount);
-        }
-    }
-
-    /** books a bet for a player on a given position for a given amount. */
-    private void bookBet(Player player, PlayerPosition position, double amount) {
-        Bet playerBet = new Bet(amount, false);
-        Map.Entry<Player, Bet> entry = Map.entry(player, playerBet);
-            /* a key-value pair is stored in the hand's log so it can be accessed later when payouts are calculated and
-            transferred. Also note: arraylists maintain insertion order so we can index the list by the position's
-            number. */
-        position.getHands().getFirst().getPairs().add(entry);
-        player.dispenseChips(amount);
-        System.out.println("Your bet has been placed! You have " + (int) player.getChips() +
-                " chips remaining.");
-    }
-
-    /** */
-    public void bookDoubleDownBet(Player player, PlayerPosition position, double amount) {
-
+        StandardBetProcessor processor = new StandardBetProcessor(isSimulation, players, playerPositionsIterable,
+                player, position, amount);
+        processor.process();
     }
 
     /** books an insurance bet for a player on a given position for a given amount. To be called AFTER the cards are
      * dealt. */
     public void bookInsuranceBet(Player player, PlayerPosition position, double amount) {
-        if(isValidInsuranceBet(player, position, amount)) {
-            InsuranceBet iBet = new InsuranceBet(amount, true);
-            Map.Entry<Player, Bet> entry = Map.entry(player, iBet);
-            position.getHands().getFirst().getPairs().add(entry);
-            player.dispenseChips(amount);
-            System.out.println("Your insurance bet has been placed! You have " + (int) player.getChips() +
-                    " chips remaining.");
-        } else {
-            // might want to fine grain error message.
-            System.out.println("Insurance bet request invalid.");
-        }
+        InsuranceBetProcessor processor = new InsuranceBetProcessor(isSimulation, players, playerPositionsIterable,
+                player, position, amount);
+        processor.process();
     }
 
-    /** validates a given player by verifying that they are registered at the table. */
-    private boolean isValidPlayer(Player player) {
-        for(Player playerFromList : players) {
-            if(player.equals(playerFromList))
-                return true;
-        }
-        return false;
-    }
+    /** doubles the player's existing bet at a given position for that amount. Players can only double down once and if
+     * they do, they can only hit one more time. If the player has already hit, they cannot double down. Also, if the
+     * player has already made a natural blackjack, they cannot double down. */
+    public void bookDoubleDownBet(Player player, PlayerPosition position) {
 
-    /** validates a given position by verifying that it is registered at the table. */
-    private boolean isValidPosition(PlayerPosition position) {
-        for(PlayerPosition positionFromList : playerPositionsIterable) {
-            if(position.equals(positionFromList))
-                return true;
-        }
-        return false;
-    }
-
-    /** validates a given bet size by verifying that it is greater than the minimum allowed while also less than the
-     * players total chips. */
-    private boolean isValidStandardBet(Player player, double betAmount) {
-        if(betAmount < DEFAULT_MIN_BET_SIZE) {
-            System.out.println("Bet size of: " + (int) betAmount + " is less than the minimum bet size: "
-                    + DEFAULT_MIN_BET_SIZE + ".");
-            return false;
-        } else if(betAmount > player.getChips()) {
-            System.out.println("Bet size of: " + (int) betAmount + " exceeds player's total chips: "
-                    + (int) player.getChips() + ".");
-            return false;
-        }
-        return true;
-    }
-
-    /** validates a given insurance bet by verifying that a standard bet already exists on the selected position and
-     * that the insurance bet amount is less than or equal to half the size of the standard bet. */
-    private boolean isValidInsuranceBet(Player player, PlayerPosition position, double amount) {
-        double playerStandardBet = playerHasBet(player, position);
-        return playerStandardBet != 0 && amount <= (playerStandardBet / 2);
-    }
-
-    /** returns true if the given player already has a standard bet on a hand at the given position. Returns false
-     * otherwise. Assumes that the player only has ONE bet on the given position. */
-    private double playerHasBet(Player player, PlayerPosition position) {
-        for(PlayerHand hand : position.getHands()) {
-            for(Map.Entry<Player,Bet> pair : hand.getPairs()) {
-                if(player.equals(pair.getKey())) {
-                    return pair.getValue().getAmount();
-                }
-            }
-        }
-        return 0;
     }
 
     /** returns a list of the active hands at the table. */
@@ -432,7 +357,7 @@ public class Table {
 
     /** processes a player's bet on a hand if it loses against the dealer. */
     public void handlePlayerLoss(PlayerHand hand, Map.Entry<Player, Bet> pair) {
-        if(hand.isBust() || getDealerHand().getHandValue() > hand.getHandValue()) {
+        if(hand.isBust() || (!getDealerHand().isBust() && getDealerHand().getHandValue() > hand.getHandValue())) {
             dealer.receiveChips(pair.getValue().getAmount());
         }
     }

@@ -11,25 +11,22 @@ import static Model.Constants.*;
 public class Controller {
 
     // private instance variables
-    private boolean isRunning;
     private boolean isSimulation;
-    private final int playerCount;
+    private boolean isRunning;
     private final Scanner scanner;
     private final Table table;
 
     // default constructor
     public Controller(int playerCount, int deckCount, boolean isSimulation) {
-        this.isRunning = true;
         this.isSimulation = isSimulation;
-        this.playerCount = playerCount;
+        this.isRunning = true;
         this.scanner = new Scanner(System.in);
-        this.table = new Table(playerCount, deckCount);
+        this.table = new Table(playerCount, deckCount, isSimulation);
     }
 
     /** initializes the emulator. */
     public void startGame() {
-        if(isSimulation) {runSimulation();} else {runGameLoop(); }
-    }
+        if(isSimulation) {runSimulation();} else {runGameLoop(); } }
 
     /// Monte Carlo Simulation
     public void runSimulation() {
@@ -40,7 +37,7 @@ public class Controller {
 
         for(int i = 0; i < DEFAULT_NUMBER_OF_ITERATIONS; i++) {
             table.startupRoutine();
-            table.bookSimulationStandardBet(mainPlayer, mainPlayer.getDefaultPosition(), DEFAULT_PLAYER_BET_AMOUNT);
+            table.bookStandardBet(mainPlayer, mainPlayer.getDefaultPosition(), DEFAULT_PLAYER_BET_AMOUNT);
             table.drawRoutine();
             table.executePlayerStrategyForAll();
             table.printDealerHand();
