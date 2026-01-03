@@ -128,7 +128,7 @@ public class Controller {
 
     /** handles cases where the player has a natural blackjack in non-simulation games. */
     private boolean handleBlackjackCase(PlayerHand hand) {
-        if(!table.dealerHasAce()) {
+        if(!hand.hasInsuranceOption(table.getDealerHand())) {
             return false;
         } else {
             System.out.println("Would you like to buy insurance? (Y/N)");
@@ -166,11 +166,11 @@ public class Controller {
                     System.out.println("Player " + hand.getActingPlayer() + " to act. Select an action:");
                     if(hand.isBlackjack()) {
                       handleBlackjackCase(hand);
-                    } else if (hand.hasSplitOption() && table.dealerHasAce()) {
+                    } else if (hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | SPLIT | INSURANCE");
-                    } else if(hand.hasSplitOption() && !table.dealerHasAce()) {
+                    } else if(hand.hasSplitOption() && !hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | SPLIT");
-                    } else if(!hand.hasSplitOption() && table.dealerHasAce()) {
+                    } else if(!hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | INSURANCE");
                     } else {
                         System.out.println("HIT | STAND");

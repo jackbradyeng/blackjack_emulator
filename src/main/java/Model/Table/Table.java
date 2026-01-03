@@ -7,7 +7,6 @@ import java.util.Objects;
 import Exceptions.PlayerCountException;
 import Model.Actors.Dealer;
 import Model.Actors.Player;
-import Model.Cards.Ace;
 import Model.Cards.Deck;
 import Model.Table.Bets.Bet;
 import Model.Table.Bets.InsuranceBet;
@@ -226,11 +225,6 @@ public class Table {
         getDealerHand().receiveCard(deck.deal());
     }
 
-    /** returns whether the dealer's face-up card is an ace or not. */
-    public boolean dealerHasAce() {
-        return (getDealerHand().getCards().getFirst() instanceof Ace);
-    }
-
     /** deals a single card to each position that has a bet. */
     private void dealToActivePositions() {
         for(PlayerPosition position : playerPositionsIterable) {
@@ -263,7 +257,7 @@ public class Table {
     public void hit(Hand hand) {
         if(!hand.isBust()) {
             hand.receiveCard(deck.deal());
-            hand.setHandValue(deck);
+            hand.setHandValue();
         } else {
             System.out.println("BUST!");
         }
@@ -272,9 +266,9 @@ public class Table {
     /** calculates the hand value for all active hands at the table. */
     private void calculateHandValues() {
         for(PlayerHand hand : getActiveHands()) {
-            hand.setHandValue(deck);
+            hand.setHandValue();
         }
-        getDealerHand().setHandValue(deck);
+        getDealerHand().setHandValue();
     }
 
     /** executes the dealer's strategy. */
@@ -372,7 +366,7 @@ public class Table {
         }
     }
 
-    /** processes a player's bet on a hand if it pushes with the dealer. (ie. the two are equal in value) */
+    /** processes a player's bet on a hand if it pushes with the dealer. (i.e. the two are equal in value) */
     public void handlePlayerPush(PlayerHand hand, Map.Entry<Player, Bet> pair) {
         if(!hand.isBust() && hand.getHandValue() == getDealerHand().getHandValue()) {
             if(!(pair.getValue() instanceof InsuranceBet)) {
@@ -394,7 +388,7 @@ public class Table {
         for(PlayerHand hand : getActiveHands()) {
             for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
                 if(pair.getValue() instanceof InsuranceBet) {
-                    if(getDealerHand().getHandValue() == BLACKJACK_CONSTANT && dealerHasAce()) {
+                    if(getDealerHand().getHandValue() == BLACKJACK_CONSTANT && hand.hasInsuranceOption(getDealerHand())) {
                         double payout = pair.getValue().getAmount() * (1 + DEFAULT_INSURANCE_RATIO);
                         dealer.dispenseChips(payout - pair.getValue().getAmount());
                         pair.getKey().receiveChips(payout);

@@ -19,6 +19,12 @@ their hand. For these reasons, it made sense to use the Table-Position model as 
 ---- Dealer Position vs. Player Position
 ---- Dealer Hand vs. Player Hand
 
+A special type of data structure was required for logging the bets on each position. This is because Blackjack allows
+players to buy insurance on multiple positions, meaning that if we were to log player bets on each hand in a HashMap,
+the keys in the map will not be unique. Since the Map.Entry interface does not enforce key-value uniqueness I chose to
+compose it in an ArrayList of entries which logs all the bets on a particular position. This data structure is similar
+to a Multimap, but naturally it foregoes the constant lookup time of a HashMap.
+
 -- Logging Bets
 
 ---- Sub-Problems:

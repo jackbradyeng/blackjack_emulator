@@ -9,20 +9,14 @@ import Model.Table.Positions.PlayerPosition;
 
 public class PlayerHand extends Hand {
 
-    // the position with which the hand is associated.
-    PlayerPosition position;
+    // the position to which the hand is allocated.
+    private PlayerPosition position;
 
-    /* Player-bet pairs for each position. This is necessary because players can "back-bet" other player's hands.
-     * A special type of data structure is required for logging the bets on each position. This is because Blackjack
-     * allows players to buy insurance on multiple positions, meaning that the keys in the map will not be unique. Since
-     * the Map.Entry interface does not enforce key-value uniqueness I've chosen to compose it in an ArrayList of entries
-     * which logs all the bets on a particular position. This data structure is similar to a Multimap but without the
-     * O(1) lookup time. */
+    /* a list of player-bet pairs for each position. This is necessary because players can "back-bet" other player's hands. */
     private ArrayList<Map.Entry<Player, Bet>> pairs;
 
     /* The acting player is the player with agency in the hand. Other players may still "back-bet" the position, but
-     * ultimate decision-making authority resides with the acting player. By default, this is the plater assigned
-     * to the position. */
+     * ultimately the acting player chooses the action. By default, this is the player assigned to the position. */
     private Player actingPlayer;
 
     public PlayerHand(PlayerPosition position) {
@@ -31,14 +25,17 @@ public class PlayerHand extends Hand {
         this.pairs = new ArrayList<>();
     }
 
+    /** returns whether the hand can be split. */
     public boolean hasSplitOption() {
         return cards.get(0).getValue() == cards.get(1).getValue();
     }
 
+    /** returns whether players can buy insurance on the hand. */
     public boolean hasInsuranceOption(DealerHand hand) {
         return hand.getCards().getFirst() instanceof Ace;
     }
 
+    /** returns whether the hand has a bet placed on it. */
     public boolean hasBet() {
         return !pairs.isEmpty();
     }
@@ -51,12 +48,9 @@ public class PlayerHand extends Hand {
         this.position = position;
     }
 
+    /** returns the list of player-bet pairs associated with the hand (if any). */
     public ArrayList<Map.Entry<Player, Bet>> getPairs() {
         return pairs;
-    }
-
-    public void setPairs(ArrayList<Map.Entry<Player, Bet>> pairs) {
-        this.pairs = pairs;
     }
 
     public Player getActingPlayer() {

@@ -4,15 +4,13 @@ import java.util.ArrayList;
 import static Model.Constants.*;
 import Model.Cards.Ace;
 import Model.Cards.Card;
-import Model.Cards.Deck;
-
 
 public class Hand {
 
     // stores the cards allocated to the hand
     protected ArrayList<Card> cards;
 
-    // stores the numeric value of the hand
+    // stores the numerical value of the hand
     protected int handValue;
 
     public Hand() {
@@ -29,14 +27,17 @@ public class Hand {
         return builder.toString();
     }
 
+    /** adds a card to the hand. */
     public void receiveCard(Card card) {
         cards.add(card);
     }
 
+    /** returns whether the hand is bust or not.*/
     public boolean isBust() {
         return handValue > BLACKJACK_CONSTANT;
     }
 
+    /** returns whether the hand is a blackjack or not. */
     public boolean isBlackjack() {
         return handValue == BLACKJACK_CONSTANT;
     }
@@ -49,12 +50,12 @@ public class Hand {
         return handValue;
     }
 
-    public void setHandValue(Deck deck) {
-        this.handValue = calculateHandValue(deck);
+    public void setHandValue() {
+        this.handValue = calculateHandValue();
     }
 
-    /* Needs to handle the ace value as well. I think this works best when we value the ace card last. */
-    private int calculateHandValue(Deck deck) {
+    /** calculates the final hand value. Sums the non-ace cards before considering aces. */
+    private int calculateHandValue() {
         int handValue = 0;
 
         // first sweep, sums the total of non-Ace cards
