@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import Model.Actors.Player;
 import Model.Table.Positions.PlayerPosition;
 
-
 public abstract class BetValidator {
 
     protected boolean isSimulation;
@@ -17,6 +16,7 @@ public abstract class BetValidator {
         this.playerPositions = playerPositions;
     }
 
+    /** abstract validation method. Precise implementation varies depending on the type of validator. */
     public abstract boolean isValid();
 
     /** validates a given player by verifying that they are registered at the table. */
@@ -35,5 +35,10 @@ public abstract class BetValidator {
                 return true;
         }
         return false;
+    }
+
+    /** validates that the player has sufficient chips to place a particular bet. */
+    protected boolean hasSufficientChips(Player player, double amount) {
+        return player.getChips() >= amount;
     }
 }

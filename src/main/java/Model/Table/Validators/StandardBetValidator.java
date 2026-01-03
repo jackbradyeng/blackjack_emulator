@@ -51,9 +51,4 @@ public class StandardBetValidator extends BetValidator {
             return true;
         }
     }
-
-    /** validates that the player has sufficient chips to place a particular bet. */
-    protected boolean hasSufficientChips(Player player, double amount) {
-        return player.getChips() >= amount;
-    }
 }

@@ -30,6 +30,17 @@ public class DoubleBetValidator extends BetValidator {
         }
     }
 
+    /** ensures that the player has an existing bet and that they have not doubled already. */
+    private boolean isValidSimulationDoubleBet() {
+        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet() && hasNotHit() && hasNotDoubled();
+    }
+
+    /** ensures that all the requirements for a simulation bet are met AND that the player has sufficient chips to post
+     * the bet. */
+    private boolean isValidDoubleBet() {
+        return isValidSimulationDoubleBet() && hasSufficientChips(player, getOriginalBet()); // and has sufficient chips
+    }
+
     /** validates that the betting player has an existing bet on the given hand. */
     public boolean hasExistingBet() {
         return getOriginalBet() != 0;
@@ -44,14 +55,6 @@ public class DoubleBetValidator extends BetValidator {
         }
         System.out.println("Existing bet not found. Double down bet invalid.");
         return 0;
-    }
-
-    private boolean isValidSimulationDoubleBet() {
-        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet() && hasNotHit() && hasNotDoubled();
-    }
-
-    private boolean isValidDoubleBet() {
-        return isValidSimulationDoubleBet() && hasSufficientChips(player, getOriginalBet()); // and has sufficient chips
     }
 
     /** validates that the given hand has not yet been hit. Opening hands should have a size of two while split hands
@@ -69,10 +72,5 @@ public class DoubleBetValidator extends BetValidator {
             }
         }
         return true;
-    }
-
-    /** validates that the player has sufficient chips to place a particular bet. */
-    protected boolean hasSufficientChips(Player player, double amount) {
-        return player.getChips() >= amount;
     }
 }
