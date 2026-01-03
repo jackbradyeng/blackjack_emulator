@@ -6,7 +6,7 @@ import Exceptions.DeckCountException;
 
 public class Deck {
 
-    private int copies;
+    private int copies; // the number of standard decks used
     private final ArrayList<String> suits;
     private final Map<String, Integer> cardValueMap;
     private ArrayList<Card> deck;
@@ -24,6 +24,7 @@ public class Deck {
         shuffle();
     }
 
+    /** validates that an appropriate number of deck copies are passed to the constructor. */
     private void processDeckCount(int copies) throws DeckCountException {
         if(copies < 1) {
             throw new DeckCountException("The deck must use at least one copy.");
@@ -32,6 +33,7 @@ public class Deck {
         }
     }
 
+    /** populates the suits list with each of the major suits. Used to streamline card creation process. */
     private void createSuits() {
         suits.add("Hearts");
         suits.add("Diamonds");
@@ -39,6 +41,7 @@ public class Deck {
         suits.add("Spades");
     }
 
+    /** maps cards to their default values. By default, the ace is mapped to its higher value. */
     private void mapCardValues(Map<String, Integer>  cardValuesMap) {
         for(String suit : suits) {
             cardValuesMap.put("TwoOf" + suit, 2);
@@ -57,7 +60,7 @@ public class Deck {
         }
     }
 
-    /** Populates the deck with cards from the map. */
+    /** populates the deck with cards from the map. */
     private void populate() {
         for (int i = 0; i < this.copies; i++) {
             for (Map.Entry<String, Integer> pair : cardValueMap.entrySet()) {
@@ -72,7 +75,11 @@ public class Deck {
         }
     }
 
-    /** Uses a modified version of the Fisher-Yates shuffling algorithm. */
+    /** uses a modified version of the Fisher-Yates shuffling algorithm. Fisher-Yates involves iterating over a set of
+     * integers, and for each integer, selecting a random index in the iteration range, and swapping it with the
+     * current integer. Essentially, this method performs Fisher-Yates but for each of the decks one by one, maintaining
+     * their respective boundaries. This is how Blackjack decks are designed to be shuffled, since it minimizes the
+     * chance of duplicate cards being dealt in a single hand. */
     private void shuffle() {
         for(int i = this.copies; i > 0; i--) {
             for(int j = NUMBER_OF_CARDS_PER_DECK; j > 0; j--) {
@@ -84,7 +91,7 @@ public class Deck {
         }
     }
 
-    /** Deals a card from the deck. */
+    /** deals a card from the deck. */
     public Card deal() {
         if(!deck.isEmpty()) {
             return deck.removeLast();
@@ -97,7 +104,7 @@ public class Deck {
         return deck.size();
     }
 
-    /** Clears the stack and creates a fresh deck instance. */
+    /** clears the stack and creates a fresh deck instance. */
     public void createNewDeck() {
         deck.clear();
         populate();
