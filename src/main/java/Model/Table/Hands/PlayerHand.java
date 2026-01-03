@@ -27,7 +27,10 @@ public class PlayerHand extends Hand {
 
     /** returns whether the hand can be split. */
     public boolean hasSplitOption() {
-        return cards.get(0).getValue() == cards.get(1).getValue();
+        if(cards.size() > 1)
+            return cards.get(0).getValue() == cards.get(1).getValue();
+        else
+            return false;
     }
 
     /** returns whether players can buy insurance on the hand. */
