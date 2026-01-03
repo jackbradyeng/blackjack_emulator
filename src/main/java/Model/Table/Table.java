@@ -181,6 +181,13 @@ public class Table {
         processor.process();
     }
 
+    /** if the player's first and second cards are equal in value and if the player has chips remaining equal to the
+     * size of their original bet, the hand is "split". Meaning that the second card is allocated to a new hand and
+     * the player's new bet is associated with this hand. */
+    public void splitHand(Player player, PlayerPosition position, PlayerHand hand) {
+        // split validator required
+    }
+
     /** returns a list of the active hands at the table. */
     public ArrayList<PlayerHand> getActiveHands() {
         ArrayList<PlayerHand> activeHands = new ArrayList<>();
@@ -321,6 +328,9 @@ public class Table {
         switch (action) {
             case HIT:
                 hit(hand);
+                break;
+            case SPLIT:
+                // book additional bet and partition hands
                 break;
             case DOUBLE:
                 // book double down bet

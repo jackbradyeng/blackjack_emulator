@@ -20,23 +20,23 @@ public class PlayerPosition {
     /* Because player's can elect to "split" their opening hand, the position class must be capable of handling multiple
     * hands. By default, the game permits two splits only, resulting in a total of 1 * 2 * 2 = 4 hands. Although these
     * hands are only instantiated once the acting player has elected to split. Note that other players with bets on the
-    * position do not have agency in the split. Their initial bet is randomly allocated to one of the two hands. */
+    * position do not have agency in the split. Their initial bet is allocated to the rightmost hands. */
     private ArrayList<PlayerHand> hands;
 
-    // constructor with player parameter
+    /** constructor with player parameter. */
     public PlayerPosition(int number, Player defaultPlayer) {
         this.positionNumber = number;
         this.defaultPlayer = defaultPlayer;
         this.hands = new ArrayList<>();
     }
 
-    // constructor with no player parameter
+    /** constructor with no player parameter. */
     public PlayerPosition(int number) {
         this.positionNumber = number;
         this.hands = new ArrayList<>();
     }
 
-    // returns true if the default player has a live bet on the position, false otherwise
+    /** returns whether the default player has a live bet on the position. */
     public boolean isDefaultPlayerInHand() {
         for(PlayerHand hand : hands) {
             for(Map.Entry<Player, Bet> pair : hand.getPairs()) {

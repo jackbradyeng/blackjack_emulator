@@ -9,7 +9,6 @@ import Model.Table.Hands.PlayerHand;
 import Model.Table.Positions.PlayerPosition;
 import Model.Table.Validators.DoubleBetValidator;
 
-
 public class DoubleBetProcessor implements BetProcessor {
 
     private final Player player;
@@ -34,9 +33,6 @@ public class DoubleBetProcessor implements BetProcessor {
     private void bookBet(Player player, PlayerPosition position, double amount) {
         Bet playerBet = new DoubleBet(amount);
         Map.Entry<Player, Bet> entry = Map.entry(player, playerBet);
-            /* a key-value pair is stored in the hand's log so it can be accessed later when payouts are calculated and
-            transferred. Also note: arraylists maintain insertion order so we can index the list by the position's
-            number. */
         position.getHands().getFirst().getPairs().add(entry);
         player.dispenseChips(amount);
         System.out.println("Your double down bet has been placed! You have " + (int) player.getChips() +

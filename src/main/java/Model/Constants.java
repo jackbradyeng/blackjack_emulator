@@ -12,11 +12,12 @@ public final class Constants {
     public static final int DEFAULT_PLAYER_DRAW_VALUE = 17;
 
     // strategy constants
-    public static final int DEFAULT_PLAYER_BET_AMOUNT = 25;
-    public static final int DEFAULT_PLAYER_INSURANCE_BET = 10;
+    public static final double DEFAULT_PLAYER_BET_AMOUNT = 25;
+    public static final double DEFAULT_PLAYER_INSURANCE_BET = 10;
     public static final String HIT = "HIT";
     public static final String STAND = "STAND";
     public static final String DOUBLE = "DOUBLE";
+    public static final String SPLIT = "SPLIT";
     public static final String INSURANCE = "INSURANCE";
 
     // deck constants

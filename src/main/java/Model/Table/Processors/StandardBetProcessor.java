@@ -26,6 +26,8 @@ public class StandardBetProcessor implements BetProcessor {
         bookStandardBet(player, position, amount);
     }
 
+    /** books a standard bet for a player on a given position for a given amount. To be called BEFORE the cards are
+     * dealt. */
     private void bookStandardBet(Player player, PlayerPosition position, double amount) {
         if(validator.isValid()) {
             bookBet(player, position, amount);

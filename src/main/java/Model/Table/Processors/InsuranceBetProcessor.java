@@ -8,7 +8,6 @@ import Model.Table.Bets.InsuranceBet;
 import Model.Table.Positions.PlayerPosition;
 import Model.Table.Validators.InsuranceBetValidator;
 
-
 public class InsuranceBetProcessor implements BetProcessor {
 
     private final Player player;
@@ -16,8 +15,9 @@ public class InsuranceBetProcessor implements BetProcessor {
     private final Double amount;
     private final InsuranceBetValidator validator;
 
-    public InsuranceBetProcessor(boolean isSimulation, ArrayList<Player> players, ArrayList<PlayerPosition> playerPositions,
-                                Player player, PlayerPosition position, Double amount) {
+    public InsuranceBetProcessor(boolean isSimulation, ArrayList<Player> players,
+                                 ArrayList<PlayerPosition> playerPositions, Player player, PlayerPosition position,
+                                 Double amount) {
         this.player = player;
         this.position = position;
         this.amount = amount;
