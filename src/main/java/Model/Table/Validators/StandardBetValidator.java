@@ -13,7 +13,7 @@ public class StandardBetValidator extends BetValidator {
 
     public StandardBetValidator(boolean isSimulation, ArrayList<Player> players, ArrayList<PlayerPosition> playerPositions,
                                 Player player, PlayerPosition position, Double amount) {
-        super(isSimulation, players, playerPositions);
+        super(isSimulation, players, playerPositions, position.getHands().getFirst());
         this.player = player;
         this.position = position;
         this.amount = amount;

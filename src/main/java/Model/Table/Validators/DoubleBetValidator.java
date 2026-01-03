@@ -12,14 +12,12 @@ public class DoubleBetValidator extends BetValidator {
 
     protected Player player;
     protected PlayerPosition position;
-    protected PlayerHand hand;
 
     public DoubleBetValidator(boolean isSimulation, ArrayList<Player> players, ArrayList<PlayerPosition> playerPositions,
                                  Player player, PlayerPosition position, PlayerHand hand) {
-        super(isSimulation, players, playerPositions);
+        super(isSimulation, players, playerPositions, hand);
         this.player = player;
         this.position = position;
-        this.hand = hand;
     }
 
     public boolean isValid() {
@@ -32,29 +30,13 @@ public class DoubleBetValidator extends BetValidator {
 
     /** ensures that the player has an existing bet and that they have not doubled already. */
     private boolean isValidSimulationDoubleBet() {
-        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet() && hasNotHit() && hasNotDoubled();
+        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet(player) && hasNotHit() && hasNotDoubled();
     }
 
     /** ensures that all the requirements for a simulation bet are met AND that the player has sufficient chips to post
      * the bet. */
     private boolean isValidDoubleBet() {
-        return isValidSimulationDoubleBet() && hasSufficientChips(player, getOriginalBet()); // and has sufficient chips
-    }
-
-    /** validates that the betting player has an existing bet on the given hand. */
-    public boolean hasExistingBet() {
-        return getOriginalBet() != 0;
-    }
-
-    /** returns the amount corresponding to the player's original bet on the hand. */
-    public double getOriginalBet() {
-        for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
-            if(pair.getKey().equals(player)) {
-                return pair.getValue().getAmount();
-            }
-        }
-        System.out.println("Existing bet not found. Double down bet invalid.");
-        return 0;
+        return isValidSimulationDoubleBet() && hasSufficientChips(player, getOriginalBet(player)); // and has sufficient chips
     }
 
     /** validates that the given hand has not yet been hit. Opening hands should have a size of two while split hands

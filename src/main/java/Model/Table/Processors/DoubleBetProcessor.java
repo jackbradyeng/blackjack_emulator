@@ -24,7 +24,7 @@ public class DoubleBetProcessor implements BetProcessor {
 
     public void process() {
         if(validator.isValid()) {
-            double amount = validator.getOriginalBet();
+            double amount = validator.getOriginalBet(player);
             bookBet(player, position, amount);
         }
     }

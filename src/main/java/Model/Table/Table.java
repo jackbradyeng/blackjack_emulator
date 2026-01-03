@@ -17,6 +17,7 @@ import Model.Table.Positions.DealerPosition;
 import Model.Table.Positions.PlayerPosition;
 import Model.Table.Processors.DoubleBetProcessor;
 import Model.Table.Processors.InsuranceBetProcessor;
+import Model.Table.Processors.SplitBetProcessor;
 import Model.Table.Processors.StandardBetProcessor;
 import static Model.Constants.*;
 
@@ -166,9 +167,9 @@ public class Table {
 
     /** books an insurance bet for a player on a given position for a given amount. To be called AFTER the cards are
      * dealt. */
-    public void bookInsuranceBet(Player player, PlayerPosition position, double amount) {
+    public void bookInsuranceBet(Player player, PlayerPosition position, PlayerHand hand, double amount) {
         InsuranceBetProcessor processor = new InsuranceBetProcessor(isSimulation, players, playerPositionsIterable,
-                player, position, amount);
+                player, position, hand, amount);
         processor.process();
     }
 
@@ -185,7 +186,9 @@ public class Table {
      * size of their original bet, the hand is "split". Meaning that the second card is allocated to a new hand and
      * the player's new bet is associated with this hand. */
     public void splitHand(Player player, PlayerPosition position, PlayerHand hand) {
-        // split validator required
+        SplitBetProcessor processor = new SplitBetProcessor(isSimulation, players, playerPositionsIterable, player,
+                position, hand);
+        processor.process();
     }
 
     /** returns a list of the active hands at the table. */
@@ -330,7 +333,8 @@ public class Table {
                 hit(hand);
                 break;
             case SPLIT:
-                // book additional bet and partition hands
+                // partition hands and book additional bet
+                splitHand(player, hand.getPosition(), hand);
                 break;
             case DOUBLE:
                 // book double down bet
@@ -340,7 +344,7 @@ public class Table {
             case INSURANCE:
                 // book insurance bet
                 System.out.println("----INSURANCE BET BOOKED!----");
-                bookInsuranceBet(player, hand.getPosition(), DEFAULT_PLAYER_INSURANCE_BET);
+                bookInsuranceBet(player, hand.getPosition(), hand, DEFAULT_PLAYER_INSURANCE_BET);
                 break;
             case STAND: {}
                 // do nothing
@@ -460,15 +464,11 @@ public class Table {
 
     // prints all active player hands at the table
     public void printActivePlayerHands() {
-        for(PlayerPosition position : playerPositionsIterable) {
-            for(PlayerHand hand : position.getHands()) {
-                if(hand.hasBet()) {
-                    System.out.println("Position: " + position.getPositionNumber());
-                    System.out.println("----" + " Hand: " + hand + " Hand value: " + hand.getHandValue() + ".");
-                    if(hand.isBust()) {
-                        System.out.println("BUST!");
-                    }
-                }
+        for(PlayerHand hand : getActiveHands()) {
+            System.out.println("Position: " + hand.getPosition().getPositionNumber());
+            System.out.println("----" + " Hand: " + hand + " Hand value: " + hand.getHandValue() + ".");
+            if (hand.isBust()) {
+                System.out.println("BUST!");
             }
         }
     }

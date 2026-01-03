@@ -5,6 +5,7 @@ import java.util.Map;
 import Model.Actors.Player;
 import Model.Table.Bets.Bet;
 import Model.Table.Bets.InsuranceBet;
+import Model.Table.Hands.PlayerHand;
 import Model.Table.Positions.PlayerPosition;
 import Model.Table.Validators.InsuranceBetValidator;
 
@@ -17,11 +18,11 @@ public class InsuranceBetProcessor implements BetProcessor {
 
     public InsuranceBetProcessor(boolean isSimulation, ArrayList<Player> players,
                                  ArrayList<PlayerPosition> playerPositions, Player player, PlayerPosition position,
-                                 Double amount) {
+                                 PlayerHand hand, Double amount) {
         this.player = player;
         this.position = position;
         this.amount = amount;
-        this.validator = new InsuranceBetValidator(isSimulation, players, playerPositions, player, position, amount);
+        this.validator = new InsuranceBetValidator(isSimulation, players, playerPositions, player, position, hand, amount);
     }
 
     public void process() {
