@@ -7,6 +7,8 @@ import Model.Table.Positions.PlayerPosition;
 
 public class Player extends Actor {
 
+    /** both the dealer and the players store a reference to their allocated position as well as a strategy object.
+     * This strategy class determines how the actor will behave in certain conditions. */
     PlayerPosition defaultPosition;
     PlayerStrategy strategy;
 
@@ -23,7 +25,9 @@ public class Player extends Actor {
         this.defaultPosition = defaultPosition;
     }
 
-    public String invokeStrategy(PlayerHand playerHand, DealerHand dealerHand) {
+    /** given the player's hand and the dealer's hand, executes the player's assigned strategy from within the player
+     * class. */
+    public String executeStrategy(PlayerHand playerHand, DealerHand dealerHand) {
         return getStrategy().executeStrategy(playerHand, dealerHand);
     }
 

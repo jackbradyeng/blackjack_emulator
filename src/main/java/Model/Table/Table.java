@@ -285,25 +285,26 @@ public class Table {
         printDealerHand();
     }
 
-    /** makes the player hit up to a specific playerHand value. */
+    /** executes the player's strategy. */
     public void executePlayerStrategy(PlayerHand playerHand, DealerHand dealerHand) {
 
-        // defines the acting player in a given hand
+        // defines the acting player in the hand
         Player actingPlayer = playerHand.getActingPlayer();
 
         // need to check that the hand is not bust to prevent null pointer exceptions in the strategy class
         while(!playerHand.isBust()) {
 
-            System.out.println("---- PLAYER STRATEGY IS: " + actingPlayer.invokeStrategy(playerHand, dealerHand) + " ----");
+            System.out.println("---- PLAYER STRATEGY IS: " + actingPlayer.executeStrategy(playerHand, dealerHand)
+                    + " ----");
 
             // players are only permitted to hit once after doubling down so the loop should terminate after doing so
-            if(actingPlayer.invokeStrategy(playerHand, dealerHand).equals(DOUBLE)) {
-                handlePlayerAction(actingPlayer, playerHand, actingPlayer.invokeStrategy(playerHand, dealerHand));
+            if(actingPlayer.executeStrategy(playerHand, dealerHand).equals(DOUBLE)) {
+                handlePlayerAction(actingPlayer, playerHand, actingPlayer.executeStrategy(playerHand, dealerHand));
                 break;
-            } else if(actingPlayer.invokeStrategy(playerHand, dealerHand).equals(STAND)) {
+            } else if(actingPlayer.executeStrategy(playerHand, dealerHand).equals(STAND)) {
                 break;
             } else {
-                handlePlayerAction(actingPlayer, playerHand, actingPlayer.invokeStrategy(playerHand, dealerHand));
+                handlePlayerAction(actingPlayer, playerHand, actingPlayer.executeStrategy(playerHand, dealerHand));
             }
         }
         printActivePlayerHands();
