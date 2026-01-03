@@ -1,9 +1,11 @@
 package Controller;
 
+import java.util.ListIterator;
 import java.util.Scanner;
 import Model.Actors.*;
 import Model.Table.*;
 import Model.Table.Hands.PlayerHand;
+
 import static Model.Constants.*;
 
 public class Controller {
@@ -152,7 +154,13 @@ public class Controller {
 
     // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
     private void playerActions() {
-        for(PlayerHand hand : table.getActiveHands()) {
+
+        /* since hand splitting modifies active hands arraylist, a list iterator is required for traversing it. */
+        ListIterator<PlayerHand> iterator = table.getActiveHands().listIterator();
+
+        while(iterator.hasNext()) {
+            PlayerHand hand = iterator.next();
+
             System.out.println("Position no. " + hand.getPosition().getPositionNumber());
 
             boolean playerCanAct = true;
@@ -175,7 +183,7 @@ public class Controller {
                     } else {
                         System.out.println("HIT | STAND");
                     }
-                    String playerAction = scanner.next();
+                    String playerAction = scanner.next().toUpperCase();
                     table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
                     table.printActivePlayerHands();
                     table.printDealerFirstCard();
