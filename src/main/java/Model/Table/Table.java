@@ -30,6 +30,7 @@ public class Table {
     private ArrayList<Player> players;
     private final DealerPosition dealerPosition;
     private final ArrayList<PlayerPosition> playerPositionsIterable;
+    private ArrayList<PlayerHand> activeHands;
     private HashMap<Player, Double> playerBalances;
     private Double houseBalance;
 
@@ -41,6 +42,7 @@ public class Table {
         this.players = new ArrayList<>();
         this.dealerPosition = new DealerPosition();
         this.playerPositionsIterable = new ArrayList<>();
+        this.activeHands = new ArrayList<>();
         this.playerBalances = new HashMap<>();
         initPlayers(playerCount);
         initPlayerPositions();
@@ -62,6 +64,7 @@ public class Table {
     public void drawRoutine() {
         determineActingPlayers();
         dealOpeningCards();
+        setActiveHands();
         calculateHandValues();
         printActivePlayerHands();
         printDealerFirstCard();
@@ -72,6 +75,7 @@ public class Table {
         handleRegularPayouts();
         handleInsurancePayouts();
         printHandResults();
+        clearActiveHands();
         clearAllHands();
     }
 
@@ -186,13 +190,14 @@ public class Table {
      * size of their original bet, the hand is "split". Meaning that the second card is allocated to a new hand and
      * the player's new bet is associated with this hand. */
     public void splitHand(Player player, PlayerPosition position, PlayerHand hand) {
-        SplitBetProcessor processor = new SplitBetProcessor(isSimulation, players, playerPositionsIterable, player,
-                position, hand);
+        SplitBetProcessor processor = new SplitBetProcessor(isSimulation, players, playerPositionsIterable, activeHands,
+                player, position, hand);
         processor.process();
+        this.activeHands = processor.refreshActiveHands();
     }
 
     /** returns a list of the active hands at the table. */
-    public ArrayList<PlayerHand> getActiveHands() {
+    public void setActiveHands() {
         ArrayList<PlayerHand> activeHands = new ArrayList<>();
         for(PlayerPosition position : playerPositionsIterable) {
             for(PlayerHand hand : position.getHands()) {
@@ -201,7 +206,15 @@ public class Table {
                 }
             }
         }
+        this.activeHands =  activeHands;
+    }
+
+    public ArrayList<PlayerHand> getActiveHands() {
         return activeHands;
+    }
+
+    public void clearActiveHands() {
+        activeHands.clear();
     }
 
     /** clears all hands at the table (along with their associated cards and player-bet pairs). */

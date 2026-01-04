@@ -10,13 +10,15 @@ import Model.Table.Validators.SplitBetValidator;
 
 public class SplitBetProcessor implements BetProcessor {
 
+    private ArrayList<PlayerHand> activeHands;
     private final Player player;
     private final PlayerPosition position;
     private final PlayerHand hand;
     private final SplitBetValidator validator;
 
     public SplitBetProcessor(boolean isSimulation, ArrayList<Player> players, ArrayList<PlayerPosition> playerPositions,
-                              Player player, PlayerPosition position, PlayerHand hand) {
+                             ArrayList<PlayerHand> activeHands, Player player, PlayerPosition position, PlayerHand hand) {
+        this.activeHands = activeHands;
         this.player = player;
         this.position = position;
         this.hand = hand;
@@ -42,8 +44,20 @@ public class SplitBetProcessor implements BetProcessor {
              // removes the split card from the main hand, adds it to the new one
              splitHand.getCards().add(hand.getCards().removeLast());
 
+             // update the hand values of both hands
+             splitHand.setHandValue();
+             hand.setHandValue();
+
              // adds the new player-bet pair to the split hand
              splitHand.getPairs().add(splitPair);
+
+             // places the split hand one place ahead of the original within the active hands instance
+            activeHands.add(activeHands.indexOf(hand) + 1, splitHand);
          }
+    }
+
+    /** returns the refreshed active hands list. */
+    public ArrayList<PlayerHand> refreshActiveHands() {
+        return activeHands;
     }
 }

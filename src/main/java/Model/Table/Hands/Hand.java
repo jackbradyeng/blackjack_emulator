@@ -65,6 +65,7 @@ public class Hand {
             }
         }
 
+        // need to consider if an ace upper value has already been counted. i.e. ace, ace, then a jack comes.
         // second sweep, sums the total of Ace cards
         for(Card card : cards) {
             if(card instanceof Ace) {

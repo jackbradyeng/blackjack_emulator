@@ -155,30 +155,28 @@ public class Controller {
     // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
     private void playerActions() {
 
-        /* since hand splitting modifies active hands arraylist, a list iterator is required for traversing it. */
-        ListIterator<PlayerHand> iterator = table.getActiveHands().listIterator();
+        System.out.println("There are currently " + table.getActiveHands().size() + " active hands.");
 
-        while(iterator.hasNext()) {
-            PlayerHand hand = iterator.next();
-
+        // fail-fast behaviour is not compatible with list modification. We will have to use another iteration technique.
+        for (int i = 0; i < table.getActiveHands().size(); i++) {
+            PlayerHand hand = table.getActiveHands().get(i);
             System.out.println("Position no. " + hand.getPosition().getPositionNumber());
-
             boolean playerCanAct = true;
 
-            while(playerCanAct) {
-                if(hand.isBust()) {
+            while (playerCanAct) {
+                if (hand.isBust()) {
                     playerCanAct = false;
-                } else if(hand.isBlackjack()) {
+                } else if (hand.isBlackjack()) {
                     playerCanAct = handleBlackjackCase(hand);
                 } else {
                     System.out.println("Player " + hand.getActingPlayer() + " to act. Select an action:");
-                    if(hand.isBlackjack()) {
-                      handleBlackjackCase(hand);
+                    if (hand.isBlackjack()) {
+                        handleBlackjackCase(hand);
                     } else if (hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | SPLIT | INSURANCE");
-                    } else if(hand.hasSplitOption() && !hand.hasInsuranceOption(table.getDealerHand())) {
+                    } else if (hand.hasSplitOption() && !hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | SPLIT");
-                    } else if(!hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
+                    } else if (!hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
                         System.out.println("HIT | STAND | INSURANCE");
                     } else {
                         System.out.println("HIT | STAND");
@@ -188,7 +186,7 @@ public class Controller {
                     table.printActivePlayerHands();
                     table.printDealerFirstCard();
 
-                    if(playerAction.equalsIgnoreCase(STAND)) {
+                    if (playerAction.equalsIgnoreCase(STAND)) {
                         playerCanAct = false;
                     }
                 }
