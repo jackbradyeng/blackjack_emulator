@@ -1,6 +1,5 @@
 package Controller;
 
-import java.util.ListIterator;
 import java.util.Scanner;
 import Model.Actors.*;
 import Model.Table.*;
@@ -11,7 +10,7 @@ import static Model.Constants.*;
 public class Controller {
 
     // private instance variables
-    private boolean isSimulation;
+    private final boolean isSimulation;
     private boolean isRunning;
     private final Scanner scanner;
     private final Table table;
@@ -59,16 +58,19 @@ public class Controller {
             initialWager();
             table.drawRoutine();
             playerActions();
-            gamePause();
+            gamePause("Dealer drawing in...");
             table.printDealerHand();
             table.executeDealerStrategy();
+            gamePause("Printing results in...");
             table.windDownRoutine();
         }
+
+        System.out.println("Thanks for playing!");
     }
 
     /** initiates a countdown before revealing the dealer's hand. Creates a bit of suspense. */
-    private void gamePause() {
-        System.out.println("Dealer drawing in...");
+    private void gamePause(String output) {
+        System.out.println(output);
         threadSleep();
         System.out.println("3...");
         threadSleep();
@@ -95,37 +97,52 @@ public class Controller {
         System.out.println("Expected Value Per Hand: " + expectedValuePerHand * 100 + "%");
     }
 
-    // initializes the first round of betting
-    // non-parameterized method for regular command line interactions
+    /** initializes the first round of betting. This is a non-parameterized method for regular command line
+     * interactions. */
     private void initialWager() {
-
-        // flag used to determine when a player has waged all their bets
-        boolean initialWager;
-
-        // initial betting round
+        // first bet
         for(Player player : table.getPlayers()) {
-            initialWager = true;
-            while(initialWager) {
+            while(true) {
+                System.out.println("Would you like to place a bet? Enter Y/N.");
+                try {
+                    String response = scanner.next();
+                    if (processStandardBet(player, response)) {
+                        break;
+                    }
+                } catch (RuntimeException e) {
+                    System.out.println("Please enter a valid response (Y/N).");
+                }
+            }
 
-                System.out.println("Would you like to place a bet? Enter Y/N");
-                String response = scanner.next();
-
-                if (response.equalsIgnoreCase("Y")) {
-                    System.out.println("Specify your bet size. You have " + (int) player.getChips() + " chips." +
-                            " The minimum bet size is " + DEFAULT_MIN_BET_SIZE + " chips.");
-                    double playerBet = scanner.nextDouble();
-                    System.out.println("Which position would you like to bet on? There are " +
-                                table.getNumberOfPositions() + " total positions.");
-                    int position = scanner.nextInt();
-                    table.bookStandardBet(player, table.getPlayerPositionsIterable().get(position - 1), playerBet);
-
-                } else if (response.equalsIgnoreCase("N")) {
-                    initialWager = false;
-                } else {
-                    System.out.println("Please enter a valid response. (Y/N)");
+            // additional bets
+            while(true) {
+                System.out.println("Would you like to place another bet?");
+                try {
+                    String response = scanner.next();
+                    if (response.equalsIgnoreCase("N")) {
+                        break;
+                    } else {
+                        processStandardBet(player, response);
+                    }
+                } catch (RuntimeException e) {
+                    System.out.println("Please enter a valid response (Y/N).");
                 }
             }
         }
+    }
+
+    /** processes a standard bet during the initial wager phase. */
+    private boolean processStandardBet(Player player, String action) {
+        if (action.equalsIgnoreCase("Y")) {
+            System.out.println("Specify your bet size. You have " + (int) player.getChips() + " chips." +
+                    " The minimum bet size is " + DEFAULT_MIN_BET_SIZE + " chips.");
+            double playerBet = scanner.nextDouble();
+            System.out.println("Which position would you like to bet on? There are " +
+                    table.getNumberOfPositions() + " total positions.");
+            int position = scanner.nextInt();
+            table.bookStandardBet(player, table.getPlayerPositionsIterable().get(position - 1), playerBet);
+            return true;
+        } else return action.equalsIgnoreCase("N");
     }
 
     /** handles cases where the player has a natural blackjack in non-simulation games. */
@@ -134,13 +151,13 @@ public class Controller {
             return false;
         } else {
             System.out.println("Would you like to buy insurance? (Y/N)");
-            String playerAction = scanner.next();
-            if(playerAction.equalsIgnoreCase("Y")) {
-                handleInsuranceCase(hand);
-                return false;
-            } else if(playerAction.equalsIgnoreCase("N")) {
-                return false;
-            } else {
+            try {
+                String playerAction = scanner.next();
+                if (playerAction.equalsIgnoreCase("Y")) {
+                    handleInsuranceCase(hand);
+                    return false;
+                } else return !playerAction.equalsIgnoreCase("N");
+            } catch (RuntimeException e) {
                 System.out.println("Please enter a valid input.");
                 return true;
             }
@@ -154,10 +171,6 @@ public class Controller {
 
     // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
     private void playerActions() {
-
-        System.out.println("There are currently " + table.getActiveHands().size() + " active hands.");
-
-        // fail-fast behaviour is not compatible with list modification. We will have to use another iteration technique.
         for (int i = 0; i < table.getActiveHands().size(); i++) {
             PlayerHand hand = table.getActiveHands().get(i);
             System.out.println("Position no. " + hand.getPosition().getPositionNumber());
@@ -181,13 +194,17 @@ public class Controller {
                     } else {
                         System.out.println("HIT | STAND");
                     }
-                    String playerAction = scanner.next().toUpperCase();
-                    table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
-                    table.printActivePlayerHands();
-                    table.printDealerFirstCard();
-
-                    if (playerAction.equalsIgnoreCase(STAND)) {
-                        playerCanAct = false;
+                    String playerAction;
+                    try {
+                        playerAction = scanner.next().toUpperCase();
+                        table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
+                        table.printActivePlayerHands();
+                        table.printDealerFirstCard();
+                        if (playerAction.equalsIgnoreCase(STAND)) {
+                            playerCanAct = false;
+                        }
+                    } catch (RuntimeException e) {
+                        System.out.println("Invalid input.");
                     }
                 }
             }
