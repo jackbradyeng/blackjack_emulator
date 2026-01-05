@@ -41,3 +41,5 @@ to a Multimap, but naturally it foregoes the constant lookup time of a HashMap.
      * private HashMap<Player, Bet> pairs; */
 
 -- The Shuffling Algorithm
+
+-- Hand Splitting & Active Hand Iteration

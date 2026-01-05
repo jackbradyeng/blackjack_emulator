@@ -57,6 +57,7 @@ public class Hand {
     /** calculates the final hand value. Sums the non-ace cards before considering aces. */
     private int calculateHandValue() {
         int handValue = 0;
+        int aceCount = 0;
 
         // first sweep, sums the total of non-Ace cards
         for(Card card : cards) {
@@ -65,11 +66,19 @@ public class Hand {
             }
         }
 
-        // need to consider if an ace upper value has already been counted. i.e. ace, ace, then a jack comes.
         // second sweep, sums the total of Ace cards
         for(Card card : cards) {
             if(card instanceof Ace) {
-                if(handValue < ACE_UPPER_VALUE) {
+                aceCount++;
+                /* if an ace has already been counted then any subsequent aces need to be assigned their lower value
+                rather than their higher value. */
+                if(aceCount > 0) {
+                    if(handValue + ACE_UPPER_VALUE < BLACKJACK_CONSTANT) {
+                        handValue += ACE_UPPER_VALUE;
+                    } else {
+                        handValue += ACE_LOWER_VALUE;
+                    }
+                } else if(handValue < ACE_UPPER_VALUE) {
                     handValue += ACE_UPPER_VALUE;
                 } else {
                     handValue += ACE_LOWER_VALUE;
