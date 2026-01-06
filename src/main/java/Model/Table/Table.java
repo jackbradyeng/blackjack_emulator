@@ -34,6 +34,12 @@ public class Table {
     private HashMap<Player, Double> playerBalances;
     private Double houseBalance;
 
+    /// table stats
+    public int blackjackCount = 0;
+    public int playerWinCount = 0;
+    public int playerLossCount = 0;
+    public int pushCount = 0;
+
     /// default constructor
     public Table(int playerCount, int deckCount, boolean isSimulation) {
         this.isSimulation = isSimulation;
@@ -385,12 +391,14 @@ public class Table {
                 if(hand.getHandValue() == BLACKJACK_CONSTANT) {
                     payout = pair.getValue().getAmount() * (1 +
                             ((double) DEFAULT_BLACKJACK_PAYOUT_DENOMINATOR / DEFAULT_BLACKJACK_PAYOUT_NUMERATOR));
+                    blackjackCount++;
                 } else {
                     payout = pair.getValue().getAmount() * (1 + DEFAULT_PAYOUT_RATIO);
                 }
                 dealer.dispenseChips(payout - pair.getValue().getAmount());
                 pair.getKey().receiveChips(payout);
             }
+            playerWinCount++;
         }
     }
 
@@ -401,6 +409,7 @@ public class Table {
                 // refund chips;
                 pair.getKey().receiveChips(pair.getValue().getAmount());
             }
+            pushCount++;
         }
     }
 
@@ -408,6 +417,7 @@ public class Table {
     public void handlePlayerLoss(PlayerHand hand, Map.Entry<Player, Bet> pair) {
         if(hand.isBust() || (!getDealerHand().isBust() && getDealerHand().getHandValue() > hand.getHandValue())) {
             dealer.receiveChips(pair.getValue().getAmount());
+            playerLossCount++;
         }
     }
 
@@ -440,20 +450,28 @@ public class Table {
         return playerPositionsIterable;
     }
 
-    public Dealer getDealer() {
-        return dealer;
-    }
-
-    public DealerPosition getDealerPosition() {
-        return dealerPosition;
-    }
-
     public DealerHand getDealerHand() {
         return dealerPosition.getHand();
     }
 
     public ArrayList<Player> getPlayers() {
         return players;
+    }
+
+    public int getBlackjackCount() {
+        return blackjackCount;
+    }
+
+    public int getPlayerWinCount() {
+        return playerWinCount;
+    }
+
+    public int getPlayerLossCount() {
+        return playerLossCount;
+    }
+
+    public int getPushCount() {
+        return pushCount;
     }
 
     /** may be required if a player decides to leave the game. */
