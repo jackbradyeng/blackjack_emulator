@@ -92,13 +92,17 @@ public class Controller {
         System.out.println("---- SUMMARY STATISTICS ----");
         System.out.println("Hand No. : " + handNumber);
         System.out.println("Blackjack Count: " + table.getBlackjackCount());
-        System.out.println("Blackjack Percentage: " + ((double) table.getBlackjackCount() / (double) handNumber) * 100 + "%");
+        System.out.println("Blackjack Percentage: " +
+                ((double) table.getBlackjackCount() / (double) handNumber) * 100 + "%");
         System.out.println("Win Count: " + table.getPlayerWinCount());
-        System.out.println("Win Percentage: " + ((double) table.getPlayerWinCount() / (double) handNumber) * 100 + "%");
+        System.out.println("Win Percentage: " +
+                ((double) table.getPlayerWinCount() / (double) handNumber) * 100 + "%");
         System.out.println("Loss Count: " + table.getPlayerLossCount());
-        System.out.println("Loss Percentage: " + ((double) table.getPlayerLossCount() / (double) handNumber) * 100 + "%");
+        System.out.println("Loss Percentage: " +
+                ((double) table.getPlayerLossCount() / (double) handNumber) * 100 + "%");
         System.out.println("Push Count: " + table.getPushCount());
-        System.out.println("Push Percentage: " + ((double) table.getPushCount() / (double) handNumber) * 100 + "%");
+        System.out.println("Push Percentage: " +
+                ((double) table.getPushCount() / (double) handNumber) * 100 + "%");
         System.out.println("Running Profit (Loss) : " + runningProfit);
         System.out.println("Average Profit Per Hand: " + averageProfitPerHand);
         System.out.println("Expected Value Per Hand: " + expectedValuePerHand * 100 + "%");
@@ -173,7 +177,17 @@ public class Controller {
 
     /** handles cases where the player orders insurance in non-simulation games. */
     private void handleInsuranceCase(PlayerHand hand) {
-        table.handlePlayerAction(hand.getActingPlayer(), hand, INSURANCE);
+        while(true) {
+            System.out.println("How much would you like to bet on insurance? The maximum size is the value of your" +
+                    "initial bet.");
+            try {
+                double insuranceBet = scanner.nextDouble();
+                table.bookInsuranceBet(hand.getActingPlayer(), hand.getPosition(), hand, insuranceBet);
+                break;
+            } catch (RuntimeException e) {
+                System.out.println("Invalid input.");
+            }
+        }
     }
 
     // core gameplay loop involving hitting, standing, splitting, and/or buying insurance
@@ -213,9 +227,14 @@ public class Controller {
                     String playerAction;
                     try {
                         playerAction = scanner.next().toUpperCase();
-                        table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
-                        table.printActivePlayerHands();
-                        table.printDealerFirstCard();
+
+                        if (playerAction.equalsIgnoreCase(INSURANCE)) {
+                            handleInsuranceCase(hand);
+                        } else {
+                            table.handlePlayerAction(hand.getActingPlayer(), hand, playerAction);
+                            table.printActivePlayerHands();
+                            table.printDealerFirstCard();
+                        }
                         if (playerAction.equalsIgnoreCase(STAND)) {
                             playerCanAct = false;
                         } else if (playerAction.equalsIgnoreCase(DOUBLE)) {
