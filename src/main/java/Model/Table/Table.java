@@ -281,6 +281,7 @@ public class Table {
         if(!hand.isBust()) {
             hand.receiveCard(deck.deal());
             hand.setHandValue();
+            hand.setHasHit(true);
         } else {
             System.out.println("BUST!");
         }

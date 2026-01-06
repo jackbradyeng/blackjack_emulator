@@ -3,6 +3,7 @@ package Controller;
 import java.util.Scanner;
 import Model.Actors.*;
 import Model.Table.*;
+import Model.Table.Hands.DealerHand;
 import Model.Table.Hands.PlayerHand;
 
 import static Model.Constants.*;
@@ -183,13 +184,22 @@ public class Controller {
                     playerCanAct = handleBlackjackCase(hand);
                 } else {
                     System.out.println("Player " + hand.getActingPlayer() + " to act. Select an action:");
+                    DealerHand dealerHand = table.getDealerHand();
                     if (hand.isBlackjack()) {
                         handleBlackjackCase(hand);
-                    } else if (hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
+                    } else if (hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand) && !hand.hasHit()) {
+                        System.out.println("HIT | STAND | DOUBLE | SPLIT | INSURANCE");
+                    } else if(!hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand) && !hand.hasHit()) {
+                        System.out.println("HIT | STAND | INSURANCE");
+                    } else if (hand.hasSplitOption() && !hand.hasInsuranceOption(dealerHand) && !hand.hasHit()) {
+                        System.out.println("HIT | STAND | DOUBLE | SPLIT");
+                    } else if (!hand.hasSplitOption() && !hand.hasInsuranceOption(dealerHand) && !hand.hasHit()) {
+                        System.out.println("HIT | STAND | DOUBLE");
+                    } else if (hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand)) {
                         System.out.println("HIT | STAND | SPLIT | INSURANCE");
-                    } else if (hand.hasSplitOption() && !hand.hasInsuranceOption(table.getDealerHand())) {
+                    } else if (hand.hasSplitOption() && !hand.hasInsuranceOption(dealerHand)) {
                         System.out.println("HIT | STAND | SPLIT");
-                    } else if (!hand.hasSplitOption() && hand.hasInsuranceOption(table.getDealerHand())) {
+                    } else if (!hand.hasSplitOption() && hand.hasInsuranceOption(dealerHand)) {
                         System.out.println("HIT | STAND | INSURANCE");
                     } else {
                         System.out.println("HIT | STAND");
@@ -201,6 +211,8 @@ public class Controller {
                         table.printActivePlayerHands();
                         table.printDealerFirstCard();
                         if (playerAction.equalsIgnoreCase(STAND)) {
+                            playerCanAct = false;
+                        } else if (playerAction.equalsIgnoreCase(DOUBLE)) {
                             playerCanAct = false;
                         }
                     } catch (RuntimeException e) {

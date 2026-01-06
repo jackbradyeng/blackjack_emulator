@@ -44,7 +44,10 @@ public class SplitBetProcessor implements BetProcessor {
              // removes the split card from the main hand, adds it to the new one
              splitHand.getCards().add(hand.getCards().removeLast());
 
-             // update the hand values of both hands
+             // resets the hit flag on the original hand
+             hand.setHasHit(false);
+
+             // updates the hand values of both hands
              splitHand.setHandValue();
              hand.setHandValue();
 

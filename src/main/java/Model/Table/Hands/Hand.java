@@ -13,6 +13,9 @@ public class Hand {
     // stores the numerical value of the hand
     protected int handValue;
 
+    // stores whether the hand has been hit or not
+    protected boolean hasHit = false;
+
     public Hand() {
         this.cards = new ArrayList<>();
     }
@@ -54,6 +57,14 @@ public class Hand {
         this.handValue = calculateHandValue();
     }
 
+    public boolean hasHit() {
+        return hasHit;
+    }
+
+    public void setHasHit(boolean hasHit) {
+        this.hasHit = hasHit;
+    }
+
     /** calculates the final hand value. Sums the non-ace cards before considering aces. */
     private int calculateHandValue() {
         int handValue = 0;
@@ -69,9 +80,6 @@ public class Hand {
         // second sweep, sums the total of Ace cards
         for(Card card : cards) {
             if(card instanceof Ace) {
-                aceCount++;
-                /* if an ace has already been counted then any subsequent aces need to be assigned their lower value
-                rather than their higher value. */
                 if(aceCount > 0) {
                     if(handValue + ACE_UPPER_VALUE < BLACKJACK_CONSTANT) {
                         handValue += ACE_UPPER_VALUE;
@@ -83,6 +91,9 @@ public class Hand {
                 } else {
                     handValue += ACE_LOWER_VALUE;
                 }
+                /* if an ace has already been counted then any subsequent aces need to be assigned their lower value
+                rather than their higher value. */
+                aceCount++;
             }
         }
         return handValue;

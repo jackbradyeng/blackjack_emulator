@@ -30,7 +30,8 @@ public class DoubleBetValidator extends BetValidator {
 
     /** ensures that the player has an existing bet and that they have not doubled already. */
     private boolean isValidSimulationDoubleBet() {
-        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet(player) && hasNotHit() && hasNotDoubled();
+        return isValidPlayer(player) && isValidPosition(position) && hasExistingBet(player) && hasNotHit()
+                && hasNotDoubled();
     }
 
     /** ensures that all the requirements for a simulation bet are met AND that the player has sufficient chips to post
@@ -42,7 +43,7 @@ public class DoubleBetValidator extends BetValidator {
     /** validates that the given hand has not yet been hit. Opening hands should have a size of two while split hands
      * should have a size of one. */
     private boolean hasNotHit() {
-        return hand.getCards().size() < 3;
+        return !hand.hasHit();
     }
 
     /** validates that a particular player has not yet doubled on the given hand. */
