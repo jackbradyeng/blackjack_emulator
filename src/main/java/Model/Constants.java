@@ -41,7 +41,7 @@ public final class Constants {
     public static final int DEFAULT_INSURANCE_RATIO = 3;
 
     // simulation constants
-    public static final int DEFAULT_NUMBER_OF_ITERATIONS = 15000;
+    public static final int DEFAULT_NUMBER_OF_ITERATIONS = 40000;
 
     // command line constants
     public static final int DEFAULT_COUNTDOWN_TIME = 1000;
