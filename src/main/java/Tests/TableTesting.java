@@ -1,5 +1,7 @@
 package Tests;
 
+import Exceptions.DeckCountException;
+import Exceptions.PlayerCountException;
 import Model.Actors.Player;
 import Model.Table.Hands.PlayerHand;
 import Model.Table.Positions.PlayerPosition;
@@ -21,19 +23,34 @@ public class TableTesting {
         table = new Table(DEFAULT_NUMBER_OF_PLAYERS, DEFAULT_NUMBER_OF_DECKS, false);
     }
 
-    /** tests that the player array size returns as expected in a single-player game. */
+    /** tests that a playerCountException is thrown when a table is assigned too many players. */
     @Order(1)
+    @Test
+    public void testPlayerCountException() {
+        PlayerCountException thrown = assertThrows(PlayerCountException.class, () ->
+                new Table(DEFAULT_TABLE_POSITIONS + 1, DEFAULT_NUMBER_OF_DECKS, false));
+    }
+
+    @Order(2)
+    @Test
+    public void testDeckCountException() {
+        DeckCountException thrown = assertThrows(DeckCountException.class, () ->
+                new Table(DEFAULT_NUMBER_OF_PLAYERS, 0, false));
+    }
+
+    /** tests that the player array size returns as expected in a single-player game. */
+    @Order(3)
     @Test
     public void testSinglePlayerCount() {assertEquals(1, table.getPlayers().size());}
 
     /** tests that the default number of table positions are instantiated and stored in the iterable list. **/
-    @Order(2)
+    @Order(4)
     @Test
     public void testPlayerPositions() {assertEquals(DEFAULT_TABLE_POSITIONS,
             table.getPlayerPositionsIterable().size());}
 
     /** tests that in a single-player game, the player is assigned to the middle position. */
-    @Order(3)
+    @Order(5)
     @Test
     public void testSinglePlayerDefaultPosition() {
         int middlePosition = DEFAULT_TABLE_POSITIONS / 2 + 1;
@@ -42,7 +59,7 @@ public class TableTesting {
     }
 
     /** tests that each position has a single (empty) hand at the beginning of the game. */
-    @Order(4)
+    @Order(6)
     @Test
     public void testPositionHandCount() {
         table.startupRoutine();
@@ -52,7 +69,7 @@ public class TableTesting {
     }
 
     /** tests that each player has the default number of starting chips at the beginning of the game. */
-    @Order(5)
+    @Order(7)
     @Test
     public void testPlayerStartingChips() {
         for(Player player : table.getPlayers()) {
@@ -61,7 +78,7 @@ public class TableTesting {
     }
 
     /** tests that a player's standard bet is correctly processed on a given position. */
-    @Order(6)
+    @Order(8)
     @Test
     public void testPlayerStandardBet() {
         Player singlePlayer = table.getPlayers().getFirst();
@@ -77,7 +94,7 @@ public class TableTesting {
     }
 
     /** tests that the table's active hands list contains the correct number and instances of hands. */
-    @Order(7)
+    @Order(9)
     @Test
     public void testActiveHandCount() {
         Player singlePlayer = table.getPlayers().getFirst();
