@@ -268,7 +268,7 @@ public class Table {
     /** sets the acting player for each hand at the table. This should usually be the default player. But if the
      * default player has not bet on their own position, then the acting player is simply the first to have bet on that
      * position. */
-    private void determineActingPlayers() {
+    public void determineActingPlayers() {
         for(PlayerPosition position : playerPositionsIterable) {
             for(PlayerHand hand : position.getHands()) {
                 if(hand.hasBet()) {
@@ -448,6 +448,10 @@ public class Table {
 
     public ArrayList<PlayerPosition> getPlayerPositionsIterable() {
         return playerPositionsIterable;
+    }
+
+    public Dealer getDealer() {
+        return dealer;
     }
 
     public DealerHand getDealerHand() {

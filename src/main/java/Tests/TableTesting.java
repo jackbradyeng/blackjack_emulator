@@ -16,11 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TableTesting {
 
-    // table instance
-    Table table;
+    // testing instance variables
+    private Table table;
+    private final int PLAYER_COUNT = 3;
 
     public TableTesting() {
-        table = new Table(DEFAULT_NUMBER_OF_PLAYERS, DEFAULT_NUMBER_OF_DECKS, false);
+        table = new Table(PLAYER_COUNT, DEFAULT_NUMBER_OF_DECKS, false);
     }
 
     /** tests that a playerCountException is thrown when a table is assigned too many players. */
@@ -35,13 +36,13 @@ public class TableTesting {
     @Test
     public void testDeckCountException() {
         DeckCountException thrown = assertThrows(DeckCountException.class, () ->
-                new Table(DEFAULT_NUMBER_OF_PLAYERS, 0, false));
+                new Table(PLAYER_COUNT, 0, false));
     }
 
     /** tests that the player array size returns as expected in a single-player game. */
     @Order(3)
     @Test
-    public void testSinglePlayerCount() {assertEquals(1, table.getPlayers().size());}
+    public void testSinglePlayerCount() {assertEquals(PLAYER_COUNT, table.getPlayers().size());}
 
     /** tests that the default number of table positions are instantiated and stored in the iterable list. **/
     @Order(4)
@@ -49,13 +50,13 @@ public class TableTesting {
     public void testPlayerPositions() {assertEquals(DEFAULT_TABLE_POSITIONS,
             table.getPlayerPositionsIterable().size());}
 
-    /** tests that in a single-player game, the player is assigned to the middle position. */
+    /** tests that in a multi-player game, each player is assigned to their respective position. */
     @Order(5)
     @Test
-    public void testSinglePlayerDefaultPosition() {
-        int middlePosition = DEFAULT_TABLE_POSITIONS / 2 + 1;
-        Player singlePlayer = table.getPlayers().getFirst();
-        assertEquals(table.getPlayerPositionsIterable().get(middlePosition).getDefaultPlayer(), singlePlayer);
+    public void testPlayerDefaultPositions() {
+        for(int i = 0; i < table.getPlayers().size(); i++) {
+            assertEquals(table.getPlayers().get(i).getDefaultPosition(), table.getPlayerPositionsIterable().get(i));
+        }
     }
 
     /** tests that each position has a single (empty) hand at the beginning of the game. */
@@ -81,15 +82,15 @@ public class TableTesting {
     @Order(8)
     @Test
     public void testPlayerStandardBet() {
-        Player singlePlayer = table.getPlayers().getFirst();
+        Player player = table.getPlayers().getFirst();
         table.startupRoutine();
-        table.bookStandardBet(singlePlayer, singlePlayer.getDefaultPosition(), 100);
+        table.bookStandardBet(player, player.getDefaultPosition(), 100);
 
         // a standard bet should be allocated to the first hand at a given position
-        PlayerHand hand = singlePlayer.getDefaultPosition().getHands().getFirst();
+        PlayerHand hand = player.getDefaultPosition().getHands().getFirst();
 
         // the key in the set of pairs should be the player object while the value should be the corresponding bet
-        assertTrue(hand.getPairs().getFirst().getKey().equals(singlePlayer)
+        assertTrue(hand.getPairs().getFirst().getKey().equals(player)
                 && hand.getPairs().getFirst().getValue().getAmount() == 100);
     }
 
@@ -104,5 +105,45 @@ public class TableTesting {
 
         assertTrue(table.getActiveHands().size() == 1 &&
                 table.getActiveHands().getFirst().equals(singlePlayer.getDefaultPosition().getHands().getFirst()));
+    }
+
+    /** tests that the dealer's position is created. */
+    @Order(10)
+    @Test
+    public void testDealerPositionNotNull() {
+        assertNotNull(table.getDealer().getPosition());
+    }
+
+    /** tests that the dealer's hand is created. */
+    @Order(11)
+    @Test
+    public void testDealerHasHand() {
+        table.startupRoutine();
+        assertNotNull(table.getDealerHand());
+    }
+
+    /** tests that a given player remains the acting player after betting on their default position. */
+    @Order(12)
+    @Test
+    public void testActivePlayerDefault() {
+        table.startupRoutine();
+        Player singlePlayer = table.getPlayers().getFirst();
+        table.bookStandardBet(singlePlayer, singlePlayer.getDefaultPosition(), 100);
+        PlayerHand hand = table.getPlayers().getFirst().getDefaultPosition().getHands().getFirst();
+        table.determineActingPlayers();
+        assertEquals(singlePlayer, hand.getActingPlayer());
+    }
+
+    /** tests that a given player becomes the acting player on a non-default position when the default player
+     * does not place a bet. */
+    @Order(13)
+    @Test
+    public void testActivePlayerNonDefault() {
+        table.startupRoutine();
+        Player singlePlayer = table.getPlayers().getFirst();
+        table.bookStandardBet(singlePlayer, table.getPlayerPositionsIterable().get(1), 100);
+        PlayerHand hand = table.getPlayerPositionsIterable().get(1).getHands().getFirst();
+        table.determineActingPlayers();
+        assertEquals(singlePlayer, hand.getActingPlayer());
     }
 }
