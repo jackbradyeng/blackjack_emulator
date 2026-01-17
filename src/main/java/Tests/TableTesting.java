@@ -1,5 +1,6 @@
 package Tests;
 
+import java.util.Map;
 import Exceptions.DeckCountException;
 import Exceptions.PlayerCountException;
 import Model.Actors.Player;
@@ -22,6 +23,15 @@ public class TableTesting {
 
     public TableTesting() {
         table = new Table(PLAYER_COUNT, DEFAULT_NUMBER_OF_DECKS, false);
+    }
+
+    // private helper method
+    private Map.Entry<Player, PlayerHand> betOnDefaultPosition() {
+        table.startupRoutine();
+        Player singlePlayer = table.getPlayers().getFirst();
+        table.bookStandardBet(singlePlayer, singlePlayer.getDefaultPosition(), 100);
+        PlayerHand hand = table.getPlayers().getFirst().getDefaultPosition().getHands().getFirst();
+        return Map.entry(singlePlayer, hand);
     }
 
     /** tests that a playerCountException is thrown when a table is assigned too many players. */
@@ -126,12 +136,10 @@ public class TableTesting {
     @Order(12)
     @Test
     public void testActivePlayerDefault() {
-        table.startupRoutine();
-        Player singlePlayer = table.getPlayers().getFirst();
-        table.bookStandardBet(singlePlayer, singlePlayer.getDefaultPosition(), 100);
-        PlayerHand hand = table.getPlayers().getFirst().getDefaultPosition().getHands().getFirst();
+        Player player = betOnDefaultPosition().getKey();
+        PlayerHand hand = betOnDefaultPosition().getValue();
         table.determineActingPlayers();
-        assertEquals(singlePlayer, hand.getActingPlayer());
+        assertEquals(player, hand.getActingPlayer());
     }
 
     /** tests that a given player becomes the acting player on a non-default position when the default player
@@ -145,5 +153,50 @@ public class TableTesting {
         PlayerHand hand = table.getPlayerPositionsIterable().get(1).getHands().getFirst();
         table.determineActingPlayers();
         assertEquals(singlePlayer, hand.getActingPlayer());
+    }
+
+    /** tests that only two cards are dealt to an active position after the draw routine. */
+    @Order(14)
+    @Test
+    public void testHandSize() {
+        PlayerHand hand = betOnDefaultPosition().getValue();
+        table.drawRoutine();
+        assertEquals(2, hand.getCards().size());
+    }
+
+    /** tests that the hand value for each active position at the start of the betting round is less than or equal to
+     * the blackjack constant. */
+    @Order(15)
+    @Test
+    public void testHandValueLessThanBlackJack() {
+        betOnDefaultPosition();
+        table.drawRoutine();
+        for(PlayerHand hand : table.getActiveHands()) {
+            assertTrue(hand.getHandValue() <= BLACKJACK_CONSTANT);
+        }
+    }
+
+    /** tests that the number of cards after hitting on a fresh hand is equal to three. */
+    @Order(16)
+    @Test
+    public void testHandCountAfterHit() {
+        PlayerHand hand = betOnDefaultPosition().getValue();
+        table.drawRoutine();
+        table.hit(hand);
+        assertEquals(3, hand.getCards().size());
+    }
+
+    /** tests that after a hand is bust, it cannot receive additional cards from the deck. */
+    @Order(17)
+    @Test
+    public void testHitAfterBust() {
+        PlayerHand hand = betOnDefaultPosition().getValue();
+        table.drawRoutine();
+        while(!hand.isBust()) {
+            table.hit(hand);
+        }
+        int size = hand.getCards().size();
+        table.hit(hand);
+        assertEquals(size, hand.getCards().size());
     }
 }
