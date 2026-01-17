@@ -22,6 +22,16 @@ public class DeckTesting {
     @Order(1)
     @Test
     public void testDeckCardCount() {
-        assertEquals(DEFAULT_NUMBER_OF_DECKS * NUMBER_OF_SUITS * NUMBER_OF_CARDS_PER_SUIT, deck.getDeck().size());
+        assertEquals(DEFAULT_NUMBER_OF_DECKS * NUMBER_OF_SUITS * NUMBER_OF_CARDS_PER_SUIT,
+                deck.getDeck().size());
+    }
+
+    /** tests that a card is successfully popped off of the deck stack after being dealt. */
+    @Order(2)
+    @Test
+    public void testDeal() {
+        deck.deal();
+        assertEquals(DEFAULT_NUMBER_OF_DECKS * NUMBER_OF_SUITS * NUMBER_OF_CARDS_PER_SUIT,
+                deck.getDeck().size() - 1);
     }
 }

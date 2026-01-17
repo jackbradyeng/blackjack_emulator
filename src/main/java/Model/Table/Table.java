@@ -56,7 +56,10 @@ public class Table {
         assignDealerPosition(dealer);
     }
 
-    /** initializes the game state for a new round of Blackjack. */
+    /** initializes the game state for a new round of Blackjack.
+     * <p> Actions: checks if the deck requires a top-up.
+     * creates empty player hands at each position.
+     * creates an empty dealer hand at the dealer position.</p> */
     public void startupRoutine() {
         printNewRoundMessage();
         logPlayerBalances();
@@ -66,7 +69,7 @@ public class Table {
         createDealerHand();
     }
 
-    /** deal each player's initial two cards, computes hand values, and outputs the results. */
+    /** Actions: deals each player two initial cards, computes the hand values for all active hands, outputs the results. */
     public void drawRoutine() {
         determineActingPlayers();
         dealOpeningCards();
@@ -76,7 +79,8 @@ public class Table {
         printDealerFirstCard();
     }
 
-    /** handles payouts and resets the game state in preparation for a new round. */
+    /** Actions: handles regular payouts, handles insurance payouts, and resets the game state in preparation for a new
+     * round. */
     public void windDownRoutine() {
         handleRegularPayouts();
         handleInsurancePayouts();

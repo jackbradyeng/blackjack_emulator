@@ -115,12 +115,4 @@ public class Deck {
     public ArrayList<Card> getDeck() {
         return deck;
     }
-
-    public ArrayList<String> getSuits() {
-        return suits;
-    }
-
-    public Map<String, Integer> getCardValueMap() {
-        return cardValueMap;
-    }
 }
