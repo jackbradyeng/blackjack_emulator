@@ -340,7 +340,9 @@ public class Table {
 
     /** executes the player strategy for all active hands at the table. */
     public void executePlayerStrategyForAll() {
-        for(PlayerHand hand : getActiveHands()) {
+        // switched to an iterative for loop to avoid ConcurrentModificationExceptions...
+        for(int i = 0; i < getActiveHands().size(); i++) {
+            PlayerHand hand = getActiveHands().get(i);
             executePlayerStrategy(hand, dealer.getPosition().getHand());
         }
     }

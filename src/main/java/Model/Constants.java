@@ -18,6 +18,7 @@ public final class Constants {
     public static final String STAND = "STAND";
     public static final String DOUBLE = "DOUBLE";
     public static final String SPLIT = "SPLIT";
+    public static final String NO_SPLIT = "NO SPLIT";
     public static final String INSURANCE = "INSURANCE";
 
     // deck constants
@@ -41,7 +42,7 @@ public final class Constants {
     public static final int DEFAULT_INSURANCE_RATIO = 3;
 
     // simulation constants
-    public static final int DEFAULT_NUMBER_OF_ITERATIONS = 40000;
+    public static final int DEFAULT_NUMBER_OF_ITERATIONS = 100000;
 
     // command line constants
     public static final int DEFAULT_COUNTDOWN_TIME = 1000;
