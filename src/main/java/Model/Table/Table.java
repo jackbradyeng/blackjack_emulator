@@ -35,6 +35,7 @@ public class Table {
     private Double houseBalance;
 
     /// table stats
+    public int handCount = 0;
     public int blackjackCount = 0;
     public int playerWinCount = 0;
     public int playerLossCount = 0;
@@ -213,6 +214,7 @@ public class Table {
             for(PlayerHand hand : position.getHands()) {
                 if(hand.hasBet()) {
                     activeHands.add(hand);
+                    handCount++;
                 }
             }
         }
@@ -361,6 +363,7 @@ public class Table {
             case SPLIT:
                 // partition hands and book additional bet
                 splitHand(player, hand.getPosition(), hand);
+                handCount++;
                 break;
             case DOUBLE:
                 // book double down bet
@@ -381,15 +384,31 @@ public class Table {
     private void handleRegularPayouts() {
         for(PlayerHand hand : getActiveHands()) {
             for(Map.Entry<Player, Bet> pair : hand.getPairs()) {
-                handlePlayerWin(hand, pair);
-                handlePlayerPush(hand, pair);
-                handlePlayerLoss(hand, pair);
+                if(handlePlayerWin(hand, pair)) {
+                    // avoid double counting bets in single player games
+                    if(isStandardBet(pair.getValue()))
+                        playerWinCount++;
+                }
+                else if(handlePlayerPush(hand, pair)) {
+                    if(isStandardBet(pair.getValue()))
+                        pushCount++;
+                }
+                else if(handlePlayerLoss(hand, pair)) {
+                    if(isStandardBet(pair.getValue())) {
+                        playerLossCount++;
+                    }
+                }
             }
         }
     }
 
+    /** private helper method. Determines whether a given bet is standard or not. */
+    private boolean isStandardBet(Bet bet) {
+        return bet.getClass().equals(Bet.class);
+    }
+
     /** process a player's bet on a hand if it wins against the dealer. */
-    public void handlePlayerWin(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+    public boolean handlePlayerWin(PlayerHand hand, Map.Entry<Player, Bet> pair) {
         if(!hand.isBust() && (getDealerHand().isBust() || hand.getHandValue() >
                 getDealerHand().getHandValue())) {
             if(!(pair.getValue() instanceof InsuranceBet)) {
@@ -404,26 +423,32 @@ public class Table {
                 dealer.dispenseChips(payout - pair.getValue().getAmount());
                 pair.getKey().receiveChips(payout);
             }
-            playerWinCount++;
+            return true;
+        } else {
+            return false;
         }
     }
 
     /** processes a player's bet on a hand if it pushes with the dealer. (i.e. the two are equal in value) */
-    public void handlePlayerPush(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+    public boolean handlePlayerPush(PlayerHand hand, Map.Entry<Player, Bet> pair) {
         if(!hand.isBust() && hand.getHandValue() == getDealerHand().getHandValue()) {
             if(!(pair.getValue() instanceof InsuranceBet)) {
                 // refund chips;
                 pair.getKey().receiveChips(pair.getValue().getAmount());
             }
-            pushCount++;
+            return true;
+        } else {
+            return false;
         }
     }
 
     /** processes a player's bet on a hand if it loses against the dealer. */
-    public void handlePlayerLoss(PlayerHand hand, Map.Entry<Player, Bet> pair) {
+    public boolean handlePlayerLoss(PlayerHand hand, Map.Entry<Player, Bet> pair) {
         if(hand.isBust() || (!getDealerHand().isBust() && getDealerHand().getHandValue() > hand.getHandValue())) {
             dealer.receiveChips(pair.getValue().getAmount());
-            playerLossCount++;
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -467,6 +492,8 @@ public class Table {
     public ArrayList<Player> getPlayers() {
         return players;
     }
+
+    public int getHandCount() {return handCount; }
 
     public int getBlackjackCount() {
         return blackjackCount;

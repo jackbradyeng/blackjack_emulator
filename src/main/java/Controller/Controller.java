@@ -93,16 +93,16 @@ public class Controller {
         System.out.println("Hand No. : " + handNumber);
         System.out.println("Blackjack Count: " + table.getBlackjackCount());
         System.out.println("Blackjack Percentage: " +
-                ((double) table.getBlackjackCount() / (double) handNumber) * 100 + "%");
+                ((double) table.getBlackjackCount() / (double) table.getHandCount()) * 100 + "%");
         System.out.println("Win Count: " + table.getPlayerWinCount());
         System.out.println("Win Percentage: " +
-                ((double) table.getPlayerWinCount() / (double) handNumber) * 100 + "%");
+                ((double) table.getPlayerWinCount() / (double) table.getHandCount()) * 100 + "%");
         System.out.println("Loss Count: " + table.getPlayerLossCount());
         System.out.println("Loss Percentage: " +
-                ((double) table.getPlayerLossCount() / (double) handNumber) * 100 + "%");
+                ((double) table.getPlayerLossCount() / (double) table.getHandCount()) * 100 + "%");
         System.out.println("Push Count: " + table.getPushCount());
         System.out.println("Push Percentage: " +
-                ((double) table.getPushCount() / (double) handNumber) * 100 + "%");
+                ((double) table.getPushCount() / (double) table.getHandCount()) * 100 + "%");
         System.out.println("Running Profit (Loss) : " + runningProfit);
         System.out.println("Average Profit Per Hand: " + averageProfitPerHand);
         System.out.println("Expected Value Per Hand: " + expectedValuePerHand * 100 + "%");
