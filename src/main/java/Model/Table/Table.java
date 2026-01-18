@@ -36,6 +36,7 @@ public class Table {
 
     /// table stats
     public int handCount = 0;
+    public int splitCount = 0;
     public int blackjackCount = 0;
     public int playerWinCount = 0;
     public int playerLossCount = 0;
@@ -364,6 +365,7 @@ public class Table {
                 // partition hands and book additional bet
                 splitHand(player, hand.getPosition(), hand);
                 handCount++;
+                splitCount++;
                 break;
             case DOUBLE:
                 // book double down bet
@@ -509,6 +511,10 @@ public class Table {
 
     public int getPushCount() {
         return pushCount;
+    }
+
+    public int getSplitCount() {
+        return splitCount;
     }
 
     /** may be required if a player decides to leave the game. */
