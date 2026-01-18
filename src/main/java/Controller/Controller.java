@@ -103,6 +103,9 @@ public class Controller {
         System.out.println("Push Count: " + table.getPushCount());
         System.out.println("Push Percentage: " +
                 ((double) table.getPushCount() / (double) table.getHandCount()) * 100 + "%");
+        System.out.println("Split Count: " + table.getSplitCount());
+        System.out.println("Split Percentage: " +
+                ((double) table.getSplitCount() /(double) table.getHandCount() * 100 + "%"));
         System.out.println("Running Profit (Loss) : " + runningProfit);
         System.out.println("Average Profit Per Hand: " + averageProfitPerHand);
         System.out.println("Expected Value Per Hand: " + expectedValuePerHand * 100 + "%");
