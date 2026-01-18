@@ -75,12 +75,17 @@ public class Deck {
         }
     }
 
+    /** shuffles the deck. */
+    private void shuffle() {
+        compoundShuffle();
+    }
+
     /** uses a modified version of the Fisher-Yates shuffling algorithm. Fisher-Yates involves iterating over a set of
      * integers, and for each integer, selecting a random index in the iteration range, and swapping it with the
      * current integer. Essentially, this method performs Fisher-Yates but for each of the decks one by one, maintaining
      * their respective boundaries. This is how Blackjack decks are designed to be shuffled, since it minimizes the
      * chance of duplicate cards being dealt in a single hand. */
-    private void shuffle() {
+    private void compoundShuffle() {
         for(int i = this.copies; i > 0; i--) {
             for(int j = NUMBER_OF_CARDS_PER_DECK; j > 0; j--) {
                 int upper = (i * NUMBER_OF_CARDS_PER_DECK) - 1;
@@ -88,6 +93,16 @@ public class Deck {
                 int rand = random.nextInt(lower, upper);
                 Collections.swap(deck, rand, (i * j) - 1);
             }
+        }
+    }
+
+    /** uses the Fisher-Yates shuffling algorithm for the whole deck stack. */
+    private void simpleShuffle() {
+        for (int i = 0; i < this.copies * NUMBER_OF_CARDS_PER_DECK; i++) {
+            int lower = 0;
+            int upper = this.copies * NUMBER_OF_CARDS_PER_DECK;
+            int rand = random.nextInt(lower, upper);
+            Collections.swap(deck, rand, i);
         }
     }
 
