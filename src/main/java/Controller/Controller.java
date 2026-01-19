@@ -1,5 +1,7 @@
 package Controller;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Scanner;
 import Model.Actors.*;
 import Model.Table.*;
@@ -30,6 +32,7 @@ public class Controller {
 
     /// Monte Carlo Simulation
     public void runSimulation() {
+        Instant start = Instant.now();
         table.printWelcomeMessage();
         Player mainPlayer = table.getPlayers().getFirst();
 
@@ -46,6 +49,10 @@ public class Controller {
             double expectedValuePerHand = averageProfitPerHand / DEFAULT_PLAYER_BET_AMOUNT;
             printStatistics(i + 1, runningProfit, averageProfitPerHand, expectedValuePerHand);
         }
+        Instant end = Instant.now();
+        Duration timeElapsed = Duration.between(start, end);
+        long seconds = timeElapsed.getSeconds();
+        System.out.println("Total processing time: " + seconds + " seconds.");
     }
 
     /// Interactive Game Loop
