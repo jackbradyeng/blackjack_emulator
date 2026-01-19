@@ -77,7 +77,7 @@ public class Deck {
 
     /** shuffles the deck. */
     private void shuffle() {
-        compoundShuffle();
+        simpleShuffle();
     }
 
     /** uses a modified version of the Fisher-Yates shuffling algorithm. Fisher-Yates involves iterating over a set of
