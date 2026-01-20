@@ -318,16 +318,12 @@ public class Table {
 
     /** executes the player's strategy. */
     public void executePlayerStrategy(PlayerHand playerHand, DealerHand dealerHand) {
-
         // defines the acting player in the hand
         Player actingPlayer = playerHand.getActingPlayer();
-
         // need to check that the hand is not bust to prevent null pointer exceptions in the strategy class
         while(!playerHand.isBust()) {
-
             System.out.println("---- PLAYER STRATEGY IS: " + actingPlayer.executeStrategy(playerHand, dealerHand)
                     + " ----");
-
             // players are only permitted to hit once after doubling down so the loop should terminate after doing so
             if(actingPlayer.executeStrategy(playerHand, dealerHand).equals(DOUBLE)) {
                 handlePlayerAction(actingPlayer, playerHand, actingPlayer.executeStrategy(playerHand, dealerHand));
@@ -415,7 +411,8 @@ public class Table {
                 getDealerHand().getHandValue())) {
             if(!(pair.getValue() instanceof InsuranceBet)) {
                 double payout;
-                if(hand.getHandValue() == BLACKJACK_CONSTANT) {
+                // blackjack pays out for natural blackjacks only
+                if(hand.getHandValue() == BLACKJACK_CONSTANT && hand.getCards().size() == 2) {
                     payout = pair.getValue().getAmount() * (1 +
                             ((double) DEFAULT_BLACKJACK_PAYOUT_DENOMINATOR / DEFAULT_BLACKJACK_PAYOUT_NUMERATOR));
                     blackjackCount++;
