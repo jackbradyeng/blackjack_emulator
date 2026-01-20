@@ -57,6 +57,15 @@ public class Hand {
         this.handValue = calculateHandValue();
     }
 
+    /** returns whether the hand has an ace in it or not. */
+    public boolean hasAce() {
+        for(Card card : cards) {
+            if(card instanceof Ace) {
+                return true;
+            }
+        } return false;
+    }
+
     public boolean hasHit() {
         return hasHit;
     }
